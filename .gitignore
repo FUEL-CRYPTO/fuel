@@ -1,0 +1,6 @@
+__pycache__
+address.book
+*.log
+keys/*.pub
+keys/*.prv
+config.py
