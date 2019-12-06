@@ -3,7 +3,15 @@
 
 # Configuration
 
-1. cp example.config.py config.py
-2. vim config.py and make your changes
-3. vim libs/Keys.py update the node_host var to contain http://ip:port (temporary_
+1. pip3 install -r requirements.txt
+2. cp example.config.py config.py
+3. vim config.py 
 
+    You only needs to edit the node_host unless you are making your own blockchain using this code. http://ip:port
+4. vim libs/Keys.py 
+
+    Update the node_host to contain http://ip:port (temporary)
+5. ./fuel-wallet.py
+
+    Note that an address.book will be created in the working directory and the public and private keys will be created 
+    into the keys/ directory.
