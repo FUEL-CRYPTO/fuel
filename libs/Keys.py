@@ -1,14 +1,15 @@
 import os
 import json
 import requests
+from config import node_host
 from os.path import exists
 from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend as crypto_default_backend
 from libs.Logger import logger
 
-# Needs the node_host here. For now, manually input
-node_host = ''
+# Shouldn't be needed any longer?
+#node_host = ''
 
 def create_address(path):
     """
