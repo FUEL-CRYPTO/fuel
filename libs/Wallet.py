@@ -1,7 +1,8 @@
 """
-IntruKit Shell
+Fuel Wallet Module
 
-This is the interactive command shell for IntruKit
+Controls the wallet functionality
+
 """
 
 import os
@@ -11,9 +12,10 @@ import requests
 import json
 from cmd import Cmd
 from decimal import Decimal
-from libs import Colors, ModuleHandler, Miner
+from libs import Colors, Miner
 from libs.Keys import create_address, check_keys, generate_key, generate_public_key, generate_private_key
 from config import node_host, address, public_key, public_key_hash, currency_total_zero, currency_length_formatter
+from libs.Logger import logger
 
 miner = Miner.Miner()
 colors = Colors.Colors()

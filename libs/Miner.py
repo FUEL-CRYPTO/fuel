@@ -1,4 +1,10 @@
-import logging
+"""
+Fuel Wallet Miner Module
+
+Controls the miner functionality
+
+"""
+
 import hashlib
 import requests
 import json
@@ -8,24 +14,7 @@ import os
 from decimal import *
 from threading import Thread
 from config import node_host, address, public_key, public_key_hash
-
-
-# Basic config for the logging logger
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-# create a file handler
-handler = logging.FileHandler('blockchain.log')
-handler.setLevel(logging.INFO)
-
-# create a logging format
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-
-# add the handlers to the logger
-logger.addHandler(handler)
+from libs.Logger import logger
 
 difficulty_int = 5
 difficulty_string = "00000"
@@ -69,7 +58,6 @@ class Miner(object):
 
         guess = '{0}{1}{2}'.format(last_proof, proof, last_hash).encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        logger.debug("GUESS: {0} : GUESSED HASH: {1}".format(guess.decode('utf8'), guess_hash))
         return guess_hash[:difficulty_int] == difficulty_string
 
     def mine(self):
