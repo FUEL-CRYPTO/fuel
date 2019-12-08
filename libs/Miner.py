@@ -13,11 +13,8 @@ from uuid import uuid4
 import os
 from decimal import *
 from threading import Thread
-from config import node_host, address, public_key, public_key_hash
+from config import node_host, node_port, address, public_key, public_key_hash, difficulty_int, difficulty_string
 from libs.Logger import logger
-
-difficulty_int = 5
-difficulty_string = "00000"
 
 miner_threads = []
 
@@ -61,10 +58,10 @@ class Miner(object):
         return guess_hash[:difficulty_int] == difficulty_string
 
     def mine(self):
-        last_block = requests.get('{0}/last_block'.format(node_host)).json()
+        last_block = requests.get('http://{0}:{1}/last_block'.format(node_host, node_port)).json()
         proof = self.proof_of_work(last_block)
 
-        submit_and_check = requests.post('{0}/submit_block'.format(node_host),
+        submit_and_check = requests.post('http://{0}:{1}/submit_block'.format(node_host, node_port),
                                          headers={"Content-Type": "application/json"},
                                          json={
                                                 'solved_block': last_block,
@@ -103,7 +100,7 @@ class Miner(object):
 
         """
         global continue_running
-        print("Starting miner...")
+        logger.info("Starting miner...")
         continue_running = True
         self.run_miner()
 
@@ -118,4 +115,4 @@ class Miner(object):
         """
         global continue_running
         continue_running = False
-        print("Miner has been stopped!")
+        logger.info("Miner has been stopped!")

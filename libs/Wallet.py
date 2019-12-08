@@ -14,11 +14,15 @@ from cmd import Cmd
 from decimal import Decimal
 from libs import Colors, Miner
 from libs.Keys import create_address, check_keys, generate_key, generate_public_key, generate_private_key
-from config import node_host, address, public_key, public_key_hash, currency_total_zero, currency_length_formatter
+from config import app_name, node_host, node_port, address, miners, public_key, public_key_hash, \
+    currency_total_zero, currency_length_formatter
 from libs.Logger import logger
+
 
 miner = Miner.Miner()
 colors = Colors.Colors()
+
+blockchain_proc = None
 
 class Wallet(Cmd):
     def do_quit(self, args):
@@ -64,6 +68,8 @@ class Wallet(Cmd):
         print("===================================================================================================\n")
         print("     Command                              Description")
         print("     -------                              -----------")
+        print("     start_blockchain                     Start the Fuel blockchain node")
+        print("     stop_blockchain                      Stop the Fuel blockchain node")
         print("     balance                              Check current balance")
         print("     transaction <recipient> <amount>     Make a new transaction")
         print("     length                               Display the current blockchain length")
@@ -127,9 +133,9 @@ class Wallet(Cmd):
         Return the wallets account balance
 
         """
-        total = currency_total_zero
+        total = Decimal(currency_total_zero)
 
-        chain_req = requests.get('{0}/chain'.format(node_host))
+        chain_req = requests.get('http://{0}:{1}/chain'.format(node_host, node_port))
 
         chain = chain_req.json()['chain']
 
@@ -155,7 +161,7 @@ class Wallet(Cmd):
         """
         index = int(args) -1
 
-        index_req = requests.post('{0}/block'.format(node_host),
+        index_req = requests.post('http://{0}:{1}/block'.format(node_host, node_port),
                                   headers={"Content-Type": "application/json"},
                                   json={"index": int(index)})
 
@@ -171,7 +177,7 @@ class Wallet(Cmd):
         Print out the length of the blockchain
 
         """
-        index_req = requests.get('{0}/length'.format(node_host))
+        index_req = requests.get('http://{0}:{1}/length'.format(node_host, node_port))
         print(index_req.json()['length'])
 
     def do_last(self, args):
@@ -184,7 +190,7 @@ class Wallet(Cmd):
         Return the last block of the blockchain and print the JSON response
 
         """
-        index_req = requests.get('{0}/last_block'.format(node_host))
+        index_req = requests.get('http://{0}:{1}/last_block'.format(node_host, node_port))
         print(json.dumps(index_req.json(), indent=4, sort_keys=True))
 
     def do_transaction(self, args):
@@ -200,7 +206,7 @@ class Wallet(Cmd):
         recipient = args.split(" ")[0]
         amount = args.split(" ")[1]
 
-        index_req = requests.post('{0}/transactions/new'.format(node_host),
+        index_req = requests.post('http://{0}:{1}/transactions/new'.format(node_host, node_port),
                                   headers={"Content-Type": "application/json"},
                                   json={"sender": address,
                                         "recipient": recipient,
@@ -223,3 +229,32 @@ class Wallet(Cmd):
 
         """
         create_address(os.path.abspath("./"))
+
+    def do_start_blockchain(self, args):
+        """
+        do_start_blockchain(self, args)
+
+        :param args:
+        :return:
+
+        Start a blockchain instance and register it as a node with the primary node service
+
+        """
+        global blockchain_proc
+        logger.info("Starting blockchain...")
+        f = open("blockchain.log", "wb")
+        blockchain_proc = subprocess.Popen(["python3", "blockchain.py"], cwd="./", stdout=f, stderr=f)
+
+    def do_stop_blockchain(self, args):
+        """
+        do_sop_blockchain(self, args)
+
+        :param args:
+        :return:
+
+        Stop the blockchain instance
+
+        """
+        global blockchain_proc
+        blockchain_proc.terminate()
+        logger.info("Blockchain has been stopped!")

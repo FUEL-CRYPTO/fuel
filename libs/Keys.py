@@ -1,15 +1,12 @@
 import os
 import json
 import requests
-from config import node_host
 from os.path import exists
 from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend as crypto_default_backend
 from libs.Logger import logger
-
-# Shouldn't be needed any longer?
-#node_host = ''
+from uuid import uuid4
 
 def create_address(path):
     """
@@ -37,8 +34,7 @@ def create_address(path):
     address_book = json.loads(open('{0}/{1}'.format(path, 'address.book'), 'r').read())
     address_book2 = open('{0}/{1}'.format(path, 'address.book'), 'w')
 
-    index_req = requests.get('{0}/account/register_address'.format(node_host))
-    address = index_req.json()['address']
+    address = str(uuid4()).replace('-', '')
 
     key = generate_key()
 

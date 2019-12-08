@@ -4,13 +4,13 @@
 
 """
 import os
+import random
 from time import sleep
+from termcolor import colored
 from libs.Keys import check_keys
 
 check_keys(os.path.dirname(os.path.realpath(__file__)))
 
-import random
-from termcolor import colored
 from libs import Banners, Wallet, Miner
 
 if __name__ == '__main__':
@@ -21,6 +21,6 @@ if __name__ == '__main__':
         pass
 
     gsh = Wallet.Wallet()
-
-    gsh.prompt = '{0}> '.format(colored('fuel-wallet', 'green'))
+    gsh.do_start_blockchain(None)
+    gsh.prompt = '{0}> '.format(colored('fuel', 'green'))
     gsh.cmdloop('')

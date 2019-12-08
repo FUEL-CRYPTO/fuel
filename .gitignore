@@ -4,3 +4,5 @@ address.book
 keys/*.pub
 keys/*.prv
 config.py
+aes.key
+storage/chain*
