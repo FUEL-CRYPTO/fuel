@@ -16,11 +16,13 @@ from libs import Banners, Wallet, Miner
 if __name__ == '__main__':
     try:
         n = random.randint(0, 2)
-        print("{0}".format(Banners.banner))
+        print("{0}".format(Banners.banner[:Banners.banner.rfind("\n")]))
     except:
         pass
 
     gsh = Wallet.Wallet()
     gsh.do_start_blockchain(None)
+    print("")
+    print("")
     gsh.prompt = '{0}> '.format(colored('fuel', 'green'))
     gsh.cmdloop('')

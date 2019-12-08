@@ -37,6 +37,12 @@ class Wallet(Cmd):
         """
         miner.stop_mining()
         print("Stopping the miner and {}exiting.\n{}".format(colors.FAIL, colors.ENDC))
+
+        global blockchain_proc
+
+        if blockchain_proc:
+            blockchain_proc.terminate()
+
         raise SystemExit
 
     def do_exit(self, args):
@@ -51,6 +57,11 @@ class Wallet(Cmd):
         """
         miner.stop_mining()
         print("Stopping the miner and {}exiting.\n{}".format(colors.FAIL, colors.ENDC))
+        global blockchain_proc
+
+        if blockchain_proc:
+            blockchain_proc.terminate()
+
         raise SystemExit
 
     def do_help(self, args):

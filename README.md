@@ -28,9 +28,14 @@ fuel> help
 2. cp example.config.py config.py
 3. vim config.py 
 
-    You only needs to edit the node_host unless you are making your own blockchain using this code. http://ip:port
-    
-4. ./fuel.py
+    You only needs to edit the node_host and node_port unless you are making your own blockchain using this code.
+
+4. vim aes.key
+     
+     Create a 32 char string to be used as the AES Key. This is used to encrypt each block in the key when
+     creating a backup that can be loaded with the blockchain node server is shutdown and restarted.
+     
+5. ./fuel.py
 
     Note that an address.book will be created in the working directory and the public and private keys will be created 
     into the keys/ directory.

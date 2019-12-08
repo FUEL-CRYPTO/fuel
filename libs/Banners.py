@@ -43,7 +43,6 @@ banner = """
 ▓█▓▓▓█▓▓▒░░▒░░░░     ░░░ ░ ░░▒▒▓██▓▓██████▓▓▓▓▓▒▓▒▒▒▒▒░░  ░░ ░   ▒▒▒░░░▒▒▒▓▓█▓▓█
 █▓▓▓▓▓▒▒▒▒▒▒▒░░░░░░░   ░░░░░ ▒▒▒▓▓█████████▓█▓▓▓▓▓▒▓▒▒▒░░ ░░░░░░▒▒░▒▒▒▓▓▒▓▓▓▓█▓▓
 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀              
-    BLOCKS : {0} - NODES: {1} - MINERS: {2} - CIRCU: {3} - DIFFICULTY: {4}
-"""
+    BLOCKS : {0} - NODES: {1} - MINERS: {2} - CIRCU: {3} - DIFFICULTY: {4}"""
 
 # Market Cap, Volume (24 HR), USD VALUE, BTC VALUE, ETH VALUE, TRANSACTIONS, HOLDERS, DECIMALS, SYMBOL (FUL/FUELC)
