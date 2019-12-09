@@ -17,7 +17,7 @@ Fuel Blockchain Commands
      stop_blockchain                        Stop the Fuel blockchain node
      register_node <protocol>://<ip>:<port> Register a new node on the blockchain network
      length                                 Display the current blockchain length
-     block                                  Display a block in the blockchain
+     block <index>                          Display a block in the blockchain
      last                                   Display the last block in the blockchain
 
 

@@ -87,7 +87,7 @@ class Wallet(Cmd):
         print("     stop_blockchain                        Stop the Fuel blockchain node")
         print("     register_node <protocol>://<ip>:<port> Register a new node on the blockchain network")
         print("     length                                 Display the current blockchain length")
-        print("     block                                  Display a block in the blockchain")
+        print("     block <index>                          Display a block in the blockchain")
         print("     last                                   Display the last block in the blockchain")
         print("\n")
         print("Fuel Wallet Commands")
