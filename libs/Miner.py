@@ -28,6 +28,8 @@ class Miner(object):
         :param last_block: <dict> last Block
         :return: <int>
 
+        Proof of work
+
         """
 
         last_proof = last_block['proof']
@@ -57,7 +59,23 @@ class Miner(object):
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:difficulty_int] == difficulty_string
 
-    def mine(self):
+    def mine(self, address):
+        """
+        mine(self, address)
+
+        :param address: <string> Wallet address to mine coins under
+        :return:
+
+        Mine coins for address
+
+        """
+        public_key = None
+        address_book = json.loads(open('{0}/{1}'.format(os.getcwd(), 'address.book'), 'r').read())
+
+        for a in address_book['book']:
+            if address == a['address']:
+                public_key = open(str(a['public_key']), 'r').read()
+
         last_block = requests.get('http://{0}:{1}/last_block'.format(node_host, node_port)).json()
         proof = self.proof_of_work(last_block)
 
@@ -73,9 +91,9 @@ class Miner(object):
 
         submission_response = submit_and_check.json()
 
-        self.run_miner()
+        self.run_miner(address)
 
-    def run_miner(self):
+    def run_miner(self, address):
         """
         run_miner(self)
 
@@ -86,11 +104,11 @@ class Miner(object):
         """
         global continue_running
         if continue_running == True:
-            process = Thread(target=self.mine)
+            process = Thread(target=self.mine, args=(address,))
             process.start()
             miner_threads.append(process)
 
-    def start_mining(self):
+    def start_mining(self, address):
         """
         start_mining(self)
 
@@ -100,9 +118,9 @@ class Miner(object):
 
         """
         global continue_running
-        logger.info("Starting miner...")
+        print("Starting miner...")
         continue_running = True
-        self.run_miner()
+        self.run_miner(address)
 
     def stop_mining(self):
         """
@@ -115,4 +133,4 @@ class Miner(object):
         """
         global continue_running
         continue_running = False
-        logger.info("Miner has been stopped!")
+        print("Miner has been stopped!")

@@ -7,6 +7,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend as crypto_default_backend
 from libs.Logger import logger
 from uuid import uuid4
+from config import address_book
 
 def create_address(path):
     """
@@ -31,7 +32,7 @@ def create_address(path):
         fh.close()
 
 
-    address_book = json.loads(open('{0}/{1}'.format(path, 'address.book'), 'r').read())
+    ab = json.loads(open('{0}/{1}'.format(path, 'address.book'), 'r').read())
     address_book2 = open('{0}/{1}'.format(path, 'address.book'), 'w')
 
     address = str(uuid4()).replace('-', '')
@@ -48,10 +49,13 @@ def create_address(path):
         "private_key": "{0}/keys/{1}.prv".format(path, address)
     }
 
-    address_book['book'].append(entry)
+    ab['book'].append(entry)
 
-    address_book2.write(json.dumps(address_book))
+    address_book2.write(json.dumps(ab))
     address_book2.close()
+
+    global address_book
+    address_book = json.loads(open('{0}/{1}'.format(os.getcwd(), 'address.book'), 'r').read())
     return True
 
 

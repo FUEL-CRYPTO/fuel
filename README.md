@@ -7,20 +7,51 @@ Fuel Wallet Commands
 ===================================================================================================
 fuel> help
 
-     Command                              Description
-     -------                              -----------
-     start_blockchain                     Start the Fuel blockchain node
-     stop_blockchain                      Stop the Fuel blockchain node
-     balance                              Check current balance
-     transaction <recipient> <amount>     Make a new transaction
-     length                               Display the current blockchain length
-     block                                Display a block in the blockchain
-     last                                 Display the last block in the blockchain
-     register_address                     Register an address and store it in the address.book
-     start_miner                          Start mining for Fuel
-     stop_miner                           Stop mining for Fuel
-     update                               Update Fuel Wallet via git pull. Requires restart
-     exit                                 Exit wallet
+
+Fuel Blockchain Commands
+===================================================================================================
+
+     Command                                Description
+     -------                                -----------
+     start_blockchain                       Start the Fuel blockchain node
+     stop_blockchain                        Stop the Fuel blockchain node
+     register_node <protocol>://<ip>:<port> Register a new node on the blockchain network
+     length                                 Display the current blockchain length
+     block                                  Display a block in the blockchain
+     last                                   Display the last block in the blockchain
+
+
+Fuel Wallet Commands
+===================================================================================================
+
+     Command                                Description
+     -------                                -----------
+     balance <address>                      Check current balance of wallet address
+     transaction <recipient> <amount>       Make a new transaction
+     register_address                       Register an address and store it in the address.book
+     address_book                           Display the address.book
+     set_address <address>                  Set the address.book address to be used by the wallet
+     using_address                          Display the address in use by the wallet
+
+
+Fuel Miner Commands
+===================================================================================================
+
+     Command                                Description
+     -------                                -----------
+     start_miner <address>                  Start mining for Fuel under <address>
+     stop_miner                             Stop mining for Fuel
+
+
+Fuel CLI Commands
+===================================================================================================
+
+     Command                                Description
+     -------                                -----------
+     banner                                 Display the Fuel banner with statistics
+     update                                 Update Fuel Wallet via git pull. Requires restart
+     exit                                   Exit wallet
+
 
 # Configuration and Execution
 

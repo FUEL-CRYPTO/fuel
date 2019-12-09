@@ -415,11 +415,11 @@ class Blockchain:
 
     def total_coin(self):
         """
-        total_coin()
+        total_coin(self)
 
         :return:
 
-        Return the total amount of count in circulation that has been awarded by a node
+        Return the blockchain's total coin in circulation
 
         """
         chain = blockchain.chain
@@ -440,7 +440,6 @@ app = Flask(__name__)
 # Instantiate the Blockchain
 blockchain = Blockchain()
 
-
 #################################################################################################
 # Before Request
 #
@@ -450,12 +449,13 @@ blockchain = Blockchain()
 
 @app.before_request
 def before_request_func():
-    routes = ['/mine', '/submit_block', '/transactions/new', '/chain', '/block', '/length', '/nodes/register',
-              '/nodes/resolve', '/account/balance', '/account/register_address', '/last_block']
+    logger.info(request.path)
+    print(request.path)
+    routes = ['/mine', '/submit_block', '/transactions/new', '/chain', '/block', '/length', '/nodes', '/nodes/register',
+              '/nodes/resolve', '/account/balance', '/account/register_address', '/last_block', '/circulation']
 
     if request.path not in routes:
         return "Invalid route."
-
 
 #################################################################################################
 # Chain Routes
@@ -496,10 +496,24 @@ def get_chain():
 #################################################################################################
 # Nodes Routes
 #
+# /nodes/hosts        : Return the registered nodes
 # /nodes/resolve      : Consensus; Resolve conflicts between nodes
 # /nodes/register     : Register a new node to the blockchain
 #
 #################################################################################################
+
+@app.route('/nodes', methods=['GET'])
+def nodes():
+    lst = []
+    for n in blockchain.nodes:
+        lst.append(n)
+
+    logger.info(blockchain.nodes)
+
+    response = {
+        "nodes": lst
+    }
+    return jsonify(response), 200
 
 @app.route('/nodes/resolve', methods=['GET'])
 def consensus():
@@ -540,6 +554,8 @@ def register_nodes():
     values = request.get_json()
 
     nodes = values.get('nodes')
+
+    print(nodes)
 
     if nodes is None:
         return "Error: Please supply a valid list of nodes", 400
@@ -604,6 +620,7 @@ def mine():
 # /last_block     : Return the last block
 # /length         : Return the chain length. N blocks
 # /submit_block   : Submit a block via mining
+# /circulation    : Return the blockchains total coin in circulation
 #
 #################################################################################################
 
@@ -623,6 +640,14 @@ def get_block():
 
 @app.route('/last_block', methods=['GET'])
 def get_last_block():
+    """
+     get_last_block()
+
+    :return:
+
+    Return the blockchain's last block
+
+    """
     return jsonify(blockchain.last_block)
 
 @app.route('/length', methods=['GET'])
@@ -670,6 +695,8 @@ def submit_block():
 
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
+    logger.info(public_key)
+    logger.info(hashlib.sha256(public_key.encode()).hexdigest())
     blockchain.new_transaction(
         sender="0",
         recipient=address,
@@ -718,7 +745,7 @@ def new_transaction():
     if not all(k in values for k in required):
         return 'Missing values', 400
 
-    hash = hashlib.sha256(values['public_key'].encode()).hexdigest()
+    public_key_hash = hashlib.sha256(values['public_key'].encode()).hexdigest()
 
     # TODO : Be sure sender has enough available coin to send to the recipient
     total = Decimal(currency_total_zero)
@@ -726,30 +753,46 @@ def new_transaction():
     for block in blockchain.chain:
         if len(block['transactions']) >= 1:
             for transaction in block['transactions']:
-                if transaction['recipient'] == values['sender']:  # and transaction['hash'] == public_key_hash:
+                if transaction['recipient'] == values['sender'] and transaction['hash'] == public_key_hash:
                     total = total + Decimal(transaction['amount'])
-                if transaction['sender'] == values['sender']:  # and transaction['hash'] == public_key_hash:
+                if transaction['sender'] == values['sender'] and transaction['hash'] == public_key_hash:
                     total = total - Decimal(transaction['amount'])
 
     if total >= Decimal(str(values['amount'])):
         # Create a new Transaction
         index = blockchain.new_transaction(values['sender'], values['recipient'],
                                            currency_length_formatter.format(Decimal(str(values['amount']))),
-                                           hash)
+                                           public_key_hash)
 
         response = {'message': 'Transaction will be added to Block {0}.'.format(index)}
         return jsonify(response), 201
     else:
-        response = {'message': 'You do not own enough coin to make this transaction.'}
+        response = {'message': 'You do not own enough coin to make this transaction or the public key is invalid.'}
         return jsonify(response), 402
 
 #################################################################################################
-# Account Routes
+# Account & Balance Routes
 #
+# /circulation                : Return the blockchains total coin in circulation
 # /account/balance            : Get an accounts balance
 # /account/register_address   : Register a new address on the blockchain
 #
 #################################################################################################
+
+@app.route('/circulation', methods=['GET'])
+def get_circulation():
+    """
+    get_circulation()
+
+    :return:
+
+    Return the blockchains total coin in circulation
+
+    """
+    response = {
+        "circulation": blockchain.total_coin()
+    }
+    return jsonify(response), 200
 
 @app.route('/account/balance', methods=['POST'])
 def account_balance():
@@ -761,21 +804,21 @@ def account_balance():
     Return balance of an address
 
     """
+    global public_key
     values = request.get_json()
 
     chain = blockchain.chain
     length = len(blockchain.chain)
     address = values.get('address')
-    #receiver_public_key = values.get('receiver_public_key')
-    #sender_public_key = values.get('sender_public_key')
+    hash = hashlib.sha256(open(str(public_key), 'r').read().encode()).hexdigest()
     total = Decimal(currency_total_zero)
 
     for link in chain:
         if len(link['transactions']) >= 1:
                 for transaction in link['transactions']:
-                    if transaction['recipient'] == address: #and transaction['receiver_public_key'] == receiver_public_key:
+                    if transaction['recipient'] == address and transaction['hash'] == hash:
                         total = total + Decimal(transaction['amount'])
-                    if transaction['sender'] == address: # and transaction['sender_public_key'] == sender_public_key:
+                    if transaction['sender'] == address and transaction['hash'] == hash:
                         total = total - Decimal(transaction['amount'])
 
     response = {"address": address, "balance": currency_length_formatter.format(total)}
@@ -801,6 +844,13 @@ def register_address():
     response = {"address": address}
     return jsonify(response)
 
+#################################################################################################
+# Main Application
+#
+# Start up the Fuel Blockchain & API
+#
+#################################################################################################
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
@@ -813,11 +863,12 @@ if __name__ == '__main__':
     blockchain.restore_chain()
 
     logger.info("Initiating chain backup thread...")
-    threading.Timer(10.0, blockchain.backup_chain()).start()
+    threading.Timer(10.0, blockchain.backup_chain).start()
 
     logger.info("Node Address: {0}".format(address))
-    logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) +1,
-                                      len(miners), blockchain.total_coin(), difficulty_int))
+    #logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) +1,
+    #                                  len(miners), blockchain.total_coin(), difficulty_int))
 
-    logger.info("Starting {0} API Server Node..".format(app_name))
-    app.run(host=node_host, port=port)
+    logger.info("Starting {0} Fuel Blockchain & API..".format(app_name))
+    #app.run(host=node_host, port=port, debug=True, threading=False)
+    app.run(host=node_host, port=port, debug=False)
