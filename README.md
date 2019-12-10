@@ -70,8 +70,15 @@ Fuel CLI Commands
 
 # Wallets
 
-When you start the ./fuel application it will create a wallet address, public key and private key. If you are running
-a blockchain the first address created will be the blockchain address. Every coin thereafter will be a wallet address.
+When you start the ./fuel application it will create an address, public key and private key. 
+
+If you are planning to run a blockchain the first address created will be the blockchain address and set of keys and 
+when running ./fuel it will be used as the default wallet address.
+
+To create a personal wallet address use 'create'. Every address created thereafter will be a personal wallet address. 
+
+To change the Fuel CLI from being set to the defaulted blockchain address you can use the 'set_address' to change it 
+to a personal wallet address. Note this will default back to the blockchain adress upon restart.
 
 # Mining
 

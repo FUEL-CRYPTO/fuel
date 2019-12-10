@@ -15,9 +15,9 @@ from urllib.parse import urlparse
 from uuid import uuid4
 import requests
 from flask import Flask, jsonify, request
-from config import app_name, aes_key, backup_storage_dir, backup_file_prefix, blocks_per_backup_file, \
-    node_host, node_port, address, public_key_hash, currency_total_zero, currency_length_formatter, reward, \
-    difficulty_string, difficulty_int, miners
+from config import app_name, blockchain_aes_key, backup_storage_dir, backup_file_prefix, blocks_per_backup_file, \
+    node_host, node_port, blockchain_address, blockchain_public_key_hash, currency_total_zero, \
+    currency_length_formatter, reward, difficulty_string, difficulty_int, miners
 import threading
 from decimal import *
 
@@ -25,7 +25,7 @@ from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend as crypto_default_backend
 
-cipher = AESCipher.AESCipher(aes_key)
+cipher = AESCipher.AESCipher(blockchain_aes_key)
 
 class Blockchain:
     def __init__(self):
@@ -595,9 +595,9 @@ def mine():
     # The sender is "0" to signify that this node has mined a new coin.
     blockchain.new_transaction(
         sender="0",
-        recipient=address,
+        recipient=blockchain_address,
         amount=currency_length_formatter.format(Decimal(reward)),
-        hash=public_key_hash,
+        hash=blockchain_public_key_hash,
     )
 
     # Forge the new Block by adding it to the chain
@@ -695,8 +695,6 @@ def submit_block():
 
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
-    logger.info(public_key)
-    logger.info(hashlib.sha256(public_key.encode()).hexdigest())
     blockchain.new_transaction(
         sender="0",
         recipient=address,
@@ -865,7 +863,7 @@ if __name__ == '__main__':
     logger.info("Initiating chain backup thread...")
     threading.Timer(10.0, blockchain.backup_chain).start()
 
-    logger.info("Node Address: {0}".format(address))
+    logger.info("Node Address: {0}".format(blockchain_address))
     logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) +1,
                                       len(miners), blockchain.total_coin(), difficulty_int))
 

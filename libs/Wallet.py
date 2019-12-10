@@ -204,8 +204,7 @@ class Wallet(Cmd):
 
         """
         if not args:
-            print("Please supply the address you want to check the balance of")
-            return
+            args = input("Address: ")
 
         total = Decimal(currency_total_zero)
 
@@ -259,7 +258,7 @@ class Wallet(Cmd):
 
         index = 0
 
-        wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallet'), 'r').read())
+        wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallets'), 'r').read())
 
         for address in wallets['wallets']:
             if args == address['address']:
@@ -336,6 +335,7 @@ class Wallet(Cmd):
 
         for page in wallets['wallets']:
             if address == page['address']:
+                print("")
                 print("Address: {0}".format(page['address']))
                 print("Public Key: {0}".format(page['public_key']))
                 print("Private Key: {0}".format(page['private_key']))

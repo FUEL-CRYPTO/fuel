@@ -23,18 +23,38 @@ miners = []
 Address and Key Configurations
 
 wallets                    : The wallets address book to be read for input
-address                    : The primary address
-public_key                 : The actual public key
-public_key_hash            : The public key hashed in sha256
+blockchain_address         : The blockchain primary address
+blockchain_public_key      : The blockchain actual public key
+blockchain_public_key_hash : The blockchain public key hashed in sha256
+address                    : The wallet primary address
+public_key                 : The wallet actual public key
+public_key_hash            : The wallet public key hashed in sha256
+
+When you start the ./fuel application it will create an address, public key and private key. 
+
+If you are planning to run a blockchain the first address created will be the blockchain address and set of keys and 
+when running ./fuel it will be used as the default wallet address.
+
+To create a personal wallet address use 'create'. Every address created thereafter will be a personal wallet address. 
+
+To change the Fuel CLI from being set to the defaulted blockchain address you can use the 'set_address' to change it 
+to a personal wallet address. Note this will default back to the blockchain adress upon restart.
 
 """
 wallets = json.loads(open('{0}/{1}'.format(os.path.dirname(os.path.realpath(__file__)),
                                                 'wallets'), 'r').read())
 
-address = wallets['wallets'][0]['address']
 
+blockchain_address = wallets['wallets'][0]['address']
+blockchain_public_key = open(str(wallets['wallets'][0]['public_key']), 'r').read()
+blockchain_public_key_hash = hashlib.sha256(open(str(
+    wallets['wallets'][0]['public_key']), 'r').read().encode()).hexdigest()
+
+
+address = wallets['wallets'][0]['address']
 public_key = open(str(wallets['wallets'][0]['public_key']), 'r').read()
-public_key_hash = hashlib.sha256(open(str(wallets['wallets'][0]['public_key']), 'r').read().encode()).hexdigest()
+public_key_hash = hashlib.sha256(open(str(
+    wallets['wallets'][0]['public_key']), 'r').read().encode()).hexdigest()
 
 """
 Encryption Configurations
