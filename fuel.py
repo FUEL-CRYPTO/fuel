@@ -31,7 +31,7 @@ if __name__ == '__main__':
     gsh = Wallet.Wallet()
 
     if start_blockchain:
-        gsh.do_start_blockchain(None)
+        gsh.do_blockchain("start")
 
     print("\n\n")
     gsh.prompt = '{0}> '.format(colored('fuel', 'green'))

@@ -22,19 +22,19 @@ miners = []
 """
 Address and Key Configurations
 
-address_book               : The address book to be read for input
+wallets                    : The wallets address book to be read for input
 address                    : The primary address
 public_key                 : The actual public key
 public_key_hash            : The public key hashed in sha256
 
 """
-address_book = json.loads(open('{0}/{1}'.format(os.path.dirname(os.path.realpath(__file__)),
-                                                'address.book'), 'r').read())
+wallets = json.loads(open('{0}/{1}'.format(os.path.dirname(os.path.realpath(__file__)),
+                                                'wallets'), 'r').read())
 
-address = address_book['book'][0]['address']
+address = wallets['wallets'][0]['address']
 
-public_key = open(str(address_book['book'][0]['public_key']), 'r').read()
-public_key_hash = hashlib.sha256(open(str(address_book['book'][0]['public_key']), 'r').read().encode()).hexdigest()
+public_key = open(str(wallets['wallets'][0]['public_key']), 'r').read()
+public_key_hash = hashlib.sha256(open(str(wallets['wallets'][0]['public_key']), 'r').read().encode()).hexdigest()
 
 """
 Encryption Configurations

@@ -635,7 +635,7 @@ def get_block():
 
     """
     values = request.get_json()
-    index_num = int(values.get('index'))
+    index_num = int(values.get('index')) - 1
     return jsonify(blockchain.chain[index_num]), 200
 
 @app.route('/last_block', methods=['GET'])
@@ -866,8 +866,8 @@ if __name__ == '__main__':
     threading.Timer(10.0, blockchain.backup_chain).start()
 
     logger.info("Node Address: {0}".format(address))
-    #logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) +1,
-    #                                  len(miners), blockchain.total_coin(), difficulty_int))
+    logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) +1,
+                                      len(miners), blockchain.total_coin(), difficulty_int))
 
     logger.info("Starting {0} Fuel Blockchain & API..".format(app_name))
     #app.run(host=node_host, port=port, debug=True, threading=False)

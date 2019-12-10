@@ -13,12 +13,11 @@ Fuel Blockchain Commands
 
      Command                                Description
      -------                                -----------
-     start_blockchain                       Start the Fuel blockchain node
-     stop_blockchain                        Stop the Fuel blockchain node
-     register_node <protocol>://<ip>:<port> Register a new node on the blockchain network
-     length                                 Display the current blockchain length
+     blockchain <start|stop|status>         Manage the blockchain process
      block <index>                          Display a block in the blockchain
      last                                   Display the last block in the blockchain
+     length                                 Display the current blockchain length
+     register <protocol>://<ip>:<port>      Register a new node on the blockchain network
 
 
 Fuel Wallet Commands
@@ -28,10 +27,10 @@ Fuel Wallet Commands
      -------                                -----------
      balance <address>                      Check current balance of wallet address
      transaction <recipient> <amount>       Make a new transaction
-     register_address                       Register an address and store it in the address.book
-     address_book                           Display the address.book
+     create                                 Create a wallet. Register new address and keys.
      set_address <address>                  Set the address.book address to be used by the wallet
-     using_address                          Display the address in use by the wallet
+     wallets                                Display the address.book
+     wstats                                 Display the address in use by the wallet
 
 
 Fuel Miner Commands
@@ -39,9 +38,7 @@ Fuel Miner Commands
 
      Command                                Description
      -------                                -----------
-     start_miner <address>                  Start mining for Fuel under <address>
-     stop_miner                             Stop mining for Fuel
-
+     miner <start|stop|status>              Start mining for Fuel under <address>
 
 Fuel CLI Commands
 ===================================================================================================
@@ -49,8 +46,8 @@ Fuel CLI Commands
      Command                                Description
      -------                                -----------
      banner                                 Display the Fuel banner with statistics
-     update                                 Update Fuel Wallet via git pull. Requires restart
      exit                                   Exit wallet
+     update                                 Update Fuel Wallet via git pull. Requires restart
 
 
 # Configuration and Execution
@@ -70,3 +67,16 @@ Fuel CLI Commands
 
     Note that an address.book will be created in the working directory and the public and private keys will be created 
     into the keys/ directory.
+
+# Wallets
+
+When you start the ./fuel application it will create a wallet address, public key and private key. If you are running
+a blockchain the first address created will be the blockchain address. Every coin thereafter will be a wallet address.
+
+# Mining
+
+You can mine under the blockchain address or personal wallet addresses by using the 'miner' command. 
+
+# Help
+
+See the 'help' command.

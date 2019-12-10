@@ -17,7 +17,6 @@ from config import node_host, node_port, address, public_key, public_key_hash, d
 from libs.Logger import logger
 
 miner_threads = []
-
 continue_running = False
 
 class Miner(object):
@@ -70,9 +69,9 @@ class Miner(object):
 
         """
         public_key = None
-        address_book = json.loads(open('{0}/{1}'.format(os.getcwd(), 'address.book'), 'r').read())
+        wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallets'), 'r').read())
 
-        for a in address_book['book']:
+        for a in wallets['wallets']:
             if address == a['address']:
                 public_key = open(str(a['public_key']), 'r').read()
 
@@ -134,3 +133,6 @@ class Miner(object):
         global continue_running
         continue_running = False
         print("Miner has been stopped!")
+
+    def miner_status(self):
+        return continue_running

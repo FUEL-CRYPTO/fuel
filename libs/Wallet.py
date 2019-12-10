@@ -16,7 +16,7 @@ from cmd import Cmd
 from decimal import Decimal
 from libs import Colors, Miner, Banners
 from libs.Keys import create_address, check_keys, generate_key, generate_public_key, generate_private_key
-from config import app_name, node_host, node_port, address_book, address, miners, public_key, public_key_hash, \
+from config import app_name, node_host, node_port, wallets, address, miners, public_key, public_key_hash, \
     currency_total_zero, currency_length_formatter, difficulty_int
 from libs.Logger import logger
 
@@ -27,46 +27,12 @@ colors = Colors.Colors()
 blockchain_proc = None
 
 class Wallet(Cmd):
-    def do_quit(self, args):
-        """
-        do_quit(self, args)
-
-        :param args:
-        :return:
-
-        Exit the application
-
-        """
-        miner.stop_mining()
-        print("Stopping the miner and {}exiting.\n{}".format(colors.FAIL, colors.ENDC))
-
-        global blockchain_proc
-
-        if blockchain_proc:
-            blockchain_proc.terminate()
-            print("Blockchain has been stopped!")
-
-        raise SystemExit
-
-    def do_exit(self, args):
-        """
-        do_exit(self, args)
-
-        :param args: None
-        :return:
-
-        Exit the wallet
-
-        """
-        miner.stop_mining()
-        print("Stopping the miner and {}exiting.\n{}".format(colors.FAIL, colors.ENDC))
-        global blockchain_proc
-
-        if blockchain_proc:
-            blockchain_proc.terminate()
-            print("Blockchain has been stopped!")
-
-        raise SystemExit
+    #################################################################################################
+    # Help Functionality
+    #
+    # help            : Print out help for the user
+    #
+    #################################################################################################
 
     def do_help(self, args):
         """
@@ -83,12 +49,11 @@ class Wallet(Cmd):
         print("===================================================================================================\n")
         print("     Command                                Description")
         print("     -------                                -----------")
-        print("     start_blockchain                       Start the Fuel blockchain node")
-        print("     stop_blockchain                        Stop the Fuel blockchain node")
-        print("     register_node <protocol>://<ip>:<port> Register a new node on the blockchain network")
-        print("     length                                 Display the current blockchain length")
+        print("     blockchain <start|stop|status>         Manage the blockchain process")
         print("     block <index>                          Display a block in the blockchain")
         print("     last                                   Display the last block in the blockchain")
+        print("     length                                 Display the current blockchain length")
+        print("     register <protocol>://<ip>:<port>      Register a new node on the blockchain network")
         print("\n")
         print("Fuel Wallet Commands")
         print("===================================================================================================\n")
@@ -96,17 +61,16 @@ class Wallet(Cmd):
         print("     -------                                -----------")
         print("     balance <address>                      Check current balance of wallet address")
         print("     transaction <recipient> <amount>       Make a new transaction")
-        print("     register_address                       Register an address and store it in the address.book")
-        print("     address_book                           Display the address.book")
-        print("     set_address <address>                  Set the address.book address to be used by the wallet")
-        print("     using_address                          Display the address in use by the wallet")
+        print("     create                                 Create a new wallet.")
+        print("     set_address <address>                  Set the wallet default address to be used")
+        print("     wallets                                Display the wallet")
+        print("     wstats                                 Display the address in use by the wallet")
         print("\n")
         print("Fuel Miner Commands")
         print("===================================================================================================\n")
         print("     Command                                Description")
         print("     -------                                -----------")
-        print("     start_miner <address>                  Start mining for Fuel under <address>")
-        print("     stop_miner                             Stop mining for Fuel")
+        print("     miner <start|stop|status>              Start mining for Fuel under <address>")
         print("\n")
         print("Fuel CLI Commands")
         print("===================================================================================================\n")
@@ -117,49 +81,117 @@ class Wallet(Cmd):
         print("     exit                                   Exit wallet")
         print("\n\n")
 
-    def do_update(self, args):
+    #################################################################################################
+    # Blockchain Functionality
+    #
+    # blockchain      : Manage the blockchain process
+    # block           : Return a block and print the JSON response
+    # last            : Return the last block of the blockchain and print the JSON response
+    # length          : Return the length of the blockchain
+    # register        : Register a new node
+    #
+    #################################################################################################
+    def do_blockchain(self, args):
         """
-        do_update(self, args)
+        do_blockchain(self, args)
 
-        :param args: None
+        :param args: <start|stop|status>
         :return:
 
-        Automagically update the Fuel Wallet by performing a "git pull" if the app was cloned from repo
+        Manage the blockchain process
 
         """
-        print("\n")
-        print("Fuel Wallet Update")
-        print("========================\n")
-        print(subprocess.check_output("git pull", shell=True).decode('utf-8'))
-        print("Please exit and restart the application.")
-        print("\n")
+        global blockchain_proc
 
-    def do_start_miner(self, args):
+        if not args:
+            args = input("start|stop|status: ")
+
+        if args == "start":
+            print("Starting blockchain...")
+            f = open("blockchain.log", "wb")
+            blockchain_proc = subprocess.Popen(["python3", "blockchain.py"], cwd="./", stdout=f, stderr=f)
+        elif args == "stop":
+            blockchain_proc.kill()
+            print("Blockchain has been stopped!")
+        elif args == "status":
+            print(blockchain_proc)
+
+    def do_block(self, args):
         """
-        do_start_miner(self, args)
+        do_block(self, args)
 
-        :param args: None
+        :param args: <block:int>
         :return:
 
-        Start the miner
+        Return a block and print the JSON response
 
         """
         if not args:
-            print("Please supply the address you want to mine for")
-            return
-        miner.start_mining(args)
+            args = input("Block: ")
 
-    def do_stop_miner(self, args):
+        index = int(args)
+
+        index_req = requests.post('http://{0}:{1}/block'.format(node_host, node_port),
+                                  headers={"Content-Type": "application/json"},
+                                  json={"index": int(index)})
+
+        print(json.dumps(index_req.json(), indent=4, sort_keys=True))
+
+    def do_last(self, args):
         """
-        do_stop_miner(self, args)
+        do_last(self, args)
 
         :param args: None
         :return:
 
-        Stop the miner
+        Return the last block of the blockchain and print the JSON response
 
         """
-        miner.stop_mining()
+        index_req = requests.get('http://{0}:{1}/last_block'.format(node_host, node_port))
+        print(json.dumps(index_req.json(), indent=4, sort_keys=True))
+
+    def do_length(self, args):
+        """
+        do_length(self, args)
+
+        :param args: None
+        :return:
+
+        Return the length of the blockchain
+
+        """
+        index_req = requests.get('http://{0}:{1}/length'.format(node_host, node_port))
+        print(index_req.json()['length'])
+
+    def do_register(self, args):
+        """
+        do_register(self, args)
+
+        :param args: <url>
+        :return:
+
+        Register a new node
+
+        """
+        if not args:
+            args = input("URL (http://123.123.123.123:5000): ")
+
+        register_node_req = requests.post('http://{0}:{1}/nodes/register'.format(node_host, node_port),
+                                          headers={"Content-Type": "application/json"},
+                                          json={"nodes": ["{0}".format(args)]})
+
+        print(json.dumps(register_node_req.json(), indent=4, sort_keys=True))
+
+    #################################################################################################
+    # Wallet Functionality
+    #
+    # wallets         : Display the wallet
+    # balance         : Return the wallets account balance
+    # create          : Create a new wallet.
+    # set_address     : Set the wallet default address to be used
+    # transaction     : Create a new transaction to send an amount of coin to a recipient
+    # wstats          : Display the address in use by the wallet
+    #################################################################################################
 
     def do_balance(self, args):
         """
@@ -189,55 +221,56 @@ class Wallet(Cmd):
                     if transaction['sender'] == args: #and transaction['hash'] == public_key_hash:
                         total = total - Decimal(transaction['amount'])
 
-        print(total)
+        print("Balance: {0}".format(total))
 
-    def do_block(self, args):
+    def do_create(self, args):
         """
-        do_block(self, args)
+        do_create(self, args)
 
-        :param args: <block:int>
+        :param args: None
         :return:
 
-        Return a block and print the JSON response
+        Create a new wallet.
+
+        Register a new address and store it in the wallets file.
+        This also creates additional keys for use with the wallet address.
 
         """
+        create_address(os.path.abspath("./"))
+
+    def do_set_address(self, args):
+        """
+        do_set_address(self, args)
+
+        :param args:
+        :return:
+
+        Set the wallet address to be used by the wallet
+
+        """
+        global wallets
+        global address
+        global public_key
+        global public_key_hash
+
         if not args:
-            print("Please supply the block you wish to review")
+            print("Please supply the address to set as the current wallet default address")
             return
 
-        index = int(args) -1
+        index = 0
 
-        index_req = requests.post('http://{0}:{1}/block'.format(node_host, node_port),
-                                  headers={"Content-Type": "application/json"},
-                                  json={"index": int(index)})
+        wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallet'), 'r').read())
 
-        print(json.dumps(index_req.json(), indent=4, sort_keys=True))
+        for address in wallets['wallets']:
+            if args == address['address']:
+                break
+            index += 1
 
-    def do_length(self, args):
-        """
-        do_length(self, args)
+        address = wallets['wallets'][index]['address']
 
-        :param args: None
-        :return:
-
-        Print out the length of the blockchain
-
-        """
-        index_req = requests.get('http://{0}:{1}/length'.format(node_host, node_port))
-        print(index_req.json()['length'])
-
-    def do_last(self, args):
-        """
-        do_last(self, args)
-
-        :param args: None
-        :return:
-
-        Return the last block of the blockchain and print the JSON response
-
-        """
-        index_req = requests.get('http://{0}:{1}/last_block'.format(node_host, node_port))
-        print(json.dumps(index_req.json(), indent=4, sort_keys=True))
+        public_key = open(str(wallets['wallets'][index]['public_key']), 'r').read()
+        public_key_hash = hashlib.sha256(
+            open(str(wallets['wallets'][index]['public_key']), 'r').read().encode()).hexdigest()
 
     def do_transaction(self, args):
         """
@@ -249,12 +282,15 @@ class Wallet(Cmd):
         Create a new transaction to send an amount of coin to a recipient
 
         """
-        recipient = args.split(" ")[0]
-        amount = args.split(" ")[1]
+        recipient = None
+        amount = None
 
-        if not recipient or not amount:
-            print("Please supply the recipient and the amount to transfer")
-            return
+        if not args:
+            recipient = input("Recipient Account: ")
+            amount = input("Amount: ")
+        else :
+            recipient = args.split(" ")[0]
+            amount = args.split(" ")[1]
 
         index_req = requests.post('http://{0}:{1}/transactions/new'.format(node_host, node_port),
                                   headers={"Content-Type": "application/json"},
@@ -267,67 +303,93 @@ class Wallet(Cmd):
 
         print(index_req.json()['message'])
 
-    def do_register_address(self, args):
+    def do_wallets(self, args):
         """
-        do_register_address(self, args)
+        do_wallet(self, args)
+
+        :param args:
+        :return:
+
+        Display the wallet
+
+        """
+        global wallets
+        wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallets'), 'r').read())
+        print(json.dumps(wallets, indent=4, sort_keys=True))
+
+    def do_wstats(self, args):
+        """
+        do_wallet(self, args)
+
+        :param args:
+        :return:
+
+        Display the address in use by the wallet
+
+        """
+        global wallets
+        global address
+        global public_key
+        global public_key_hash
+
+        wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallets'), 'r').read())
+
+        for page in wallets['wallets']:
+            if address == page['address']:
+                print("Address: {0}".format(page['address']))
+                print("Public Key: {0}".format(page['public_key']))
+                print("Private Key: {0}".format(page['private_key']))
+                print("Public Key Hash: {0}".format(hashlib.sha256(open(str(
+                    page['public_key']), 'r').read().encode()).hexdigest()))
+                self.do_balance(page['address'])
+                print("")
+
+    #################################################################################################
+    # Miner Functionality
+    #
+    # miner           : Manage the miner thread
+    #
+    #################################################################################################
+
+    def do_miner(self, args):
+        """
+        do_start_miner(self, args)
 
         :param args: None
         :return:
 
-        Register a new address and store it in the address.book file. This also creates additional keys
-        for use with the address.
+        Start, status or view the status of the miner
 
         """
-        create_address(os.path.abspath("./"))
+        do = None
+        address = None
 
-    def do_register_node(self, args):
-        """
-        do_register_node(self, args)
-
-        :param args: None
-        :return:
-
-        Register a new node
-
-        """
         if not args:
-            print("Please supply the node to register. Ex: http://123.123.123.123:5000")
-            return
+            do = input("start|stop|status: ")
+            if do == "start":
+                address = input("Account: ")
+        else:
+            do = args.split(" ")[0]
+            if do == "start":
+                address = args.split(" ")[1]
 
-        register_node_req = requests.post('http://{0}:{1}/nodes/register'.format(node_host, node_port),
-                                  headers={"Content-Type": "application/json"},
-                                  json={"nodes": ["{0}".format(args)]})
+        if do == "start":
+            args.split(" ")[1]
+            miner.start_mining(address)
+        elif do == "stop":
+            miner.stop_mining()
+        elif do == "status":
+            print("Miner Running: {0}".format(miner.miner_status()))
 
-        print(json.dumps(register_node_req.json(), indent=4, sort_keys=True))
-
-    def do_start_blockchain(self, args):
-        """
-        do_start_blockchain(self, args)
-
-        :param args:
-        :return:
-
-        Start a blockchain instance and register it as a node with the primary node service
-
-        """
-        global blockchain_proc
-        print("Starting blockchain...")
-        f = open("blockchain.log", "wb")
-        blockchain_proc = subprocess.Popen(["python3", "blockchain.py"], cwd="./", stdout=f, stderr=f)
-
-    def do_stop_blockchain(self, args):
-        """
-        do_sop_blockchain(self, args)
-
-        :param args:
-        :return:
-
-        Stop the blockchain instance
-
-        """
-        global blockchain_proc
-        blockchain_proc.kill()
-        print("Blockchain has been stopped!")
+    #################################################################################################
+    # CLI Functionality
+    #
+    # banner          : Display the Fuel banner with statistics
+    # exit            : Exit/Quit the wallet
+    # quit            : Exit/Quit the wallet
+    # update          : Automagically update the Fuel Wallet by performing a "git pull" if the app was cloned from repo
+    #
+    #################################################################################################
 
     def do_banner(self, args):
         """
@@ -350,76 +412,61 @@ class Wallet(Cmd):
         except:
             pass
 
-    def do_address_book(self, args):
+    def do_exit(self, args):
         """
-        do_address_book(self, args)
+        do_exit(self, args)
+
+        :param args: None
+        :return:
+
+        Exit the wallet
+
+        """
+        miner.stop_mining()
+        print("Stopping the miner and {}exiting.\n{}".format(colors.FAIL, colors.ENDC))
+        global blockchain_proc
+
+        if blockchain_proc:
+            blockchain_proc.terminate()
+            print("Blockchain has been stopped!")
+
+        raise SystemExit
+
+    def do_quit(self, args):
+        """
+        do_quit(self, args)
 
         :param args:
         :return:
 
-        Display the address.book
+        Exit the application
 
         """
-        global address_book
-        address_book = json.loads(open('{0}/{1}'.format(os.getcwd(), 'address.book'), 'r').read())
-        print(json.dumps(address_book, indent=4, sort_keys=True))
+        miner.stop_mining()
+        print("Stopping the miner and {}exiting.\n{}".format(colors.FAIL, colors.ENDC))
 
-    def do_set_address(self, args):
+        global blockchain_proc
+
+        if blockchain_proc:
+            blockchain_proc.terminate()
+            print("Blockchain has been stopped!")
+
+        raise SystemExit
+
+    def do_update(self, args):
         """
-        do_set_address(self, args)
+        do_update(self, args)
 
-        :param args:
+        :param args: None
         :return:
 
-        Set the address.book address to be used by the wallet
+        Automagically update the Fuel Wallet by performing a "git pull" if the app was cloned from repo
 
         """
-        global address_book
-        global address
-        global public_key
-        global public_key_hash
+        print("\n")
+        print("Fuel Wallet Update")
+        print("========================\n")
+        print(subprocess.check_output("git pull", shell=True).decode('utf-8'))
+        print("Please exit and restart the application.")
+        print("\n")
 
-        if not args:
-            print("Please supply the address to set as the current wallet default address")
-            return
-
-        index = 0
-
-        address_book = json.loads(open('{0}/{1}'.format(os.getcwd(), 'address.book'), 'r').read())
-
-        for address in address_book['book']:
-            if args == address['address']:
-                break
-            index += 1
-
-        address = address_book['book'][index]['address']
-
-        public_key = open(str(address_book['book'][index]['public_key']), 'r').read()
-        public_key_hash = hashlib.sha256(
-            open(str(address_book['book'][index]['public_key']), 'r').read().encode()).hexdigest()
-
-    def do_using_address(self, args):
-        """
-        do_using_address(self, args)
-
-        :param args:
-        :return:
-
-        Display the address in use by the wallet
-
-        """
-        global address_book
-        global address
-        global public_key
-        global public_key_hash
-
-        address_book = json.loads(open('{0}/{1}'.format(os.getcwd(), 'address.book'), 'r').read())
-
-        for page in address_book['book']:
-            if address == page['address']:
-                print("Address: {0}".format(page['address']))
-                print("Public Key: {0}".format(page['public_key']))
-                print("Private Key: {0}".format(page['private_key']))
-                print("Public Key Hash: {0}".format(hashlib.sha256(open(str(
-                    page['public_key']), 'r').read().encode()).hexdigest()))
-                print("")

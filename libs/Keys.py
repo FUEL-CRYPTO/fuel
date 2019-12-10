@@ -1,13 +1,13 @@
 import os
 import json
 import requests
+import hashlib
 from os.path import exists
 from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend as crypto_default_backend
 from libs.Logger import logger
 from uuid import uuid4
-from config import address_book
 
 def create_address(path):
     """
@@ -18,22 +18,22 @@ def create_address(path):
 
     Create address.
     Create public and private keys.
-    Write their entry to the address.book.
+    Write their entry to the wallet.
 
     """
-    if exists('{0}/{1}'.format(path, 'address.book')):
-        # If the address.book exists, pass and append new address
+    if exists('{0}/{1}'.format(path, 'wallets')):
+        # If the wallet exists, pass and append new address
         pass
     else:
-        # If address.book don't exist create new file
-        open('{0}/{1}'.format(path, 'address.book'), 'x')
-        fh = open('{0}/{1}'.format(path, 'address.book'), 'w')
-        fh.write("{\"book\": []}")
+        # If wallet don't exist create new file
+        open('{0}/{1}'.format(path, 'wallets'), 'x')
+        fh = open('{0}/{1}'.format(path, 'wallets'), 'w')
+        fh.write("{\"wallets\": []}")
         fh.close()
 
 
-    ab = json.loads(open('{0}/{1}'.format(path, 'address.book'), 'r').read())
-    address_book2 = open('{0}/{1}'.format(path, 'address.book'), 'w')
+    ab = json.loads(open('{0}/{1}'.format(path, 'wallets'), 'r').read())
+    wallet2 = open('{0}/{1}'.format(path, 'wallets'), 'w')
 
     address = str(uuid4()).replace('-', '')
 
@@ -46,16 +46,18 @@ def create_address(path):
     entry = {
         "address": address,
         "public_key": "{0}/keys/{1}.pub".format(path, address),
-        "private_key": "{0}/keys/{1}.prv".format(path, address)
+        "private_key": "{0}/keys/{1}.prv".format(path, address),
+        "hash": "{0}".format(hashlib.sha256(open(str("{0}/keys/{1}.pub".format(path,
+                                                                          address)), 'r').read().encode()).hexdigest())
     }
 
-    ab['book'].append(entry)
+    ab['wallets'].append(entry)
 
-    address_book2.write(json.dumps(ab))
-    address_book2.close()
+    wallet2.write(json.dumps(ab))
+    wallet2.close()
 
-    global address_book
-    address_book = json.loads(open('{0}/{1}'.format(os.getcwd(), 'address.book'), 'r').read())
+    global wallets
+    wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallets'), 'r').read())
     return True
 
 
@@ -66,10 +68,10 @@ def check_keys(path):
     :param path: Relative path of fuel-wallet/keys
     :return:
 
-    If address.book exists, continue else create first address in the book
+    If wallet exists, continue else create first address in the wallet
 
     """
-    if exists('address.book'):
+    if exists('wallets'):
         return True
     else:
         create_address(path)
