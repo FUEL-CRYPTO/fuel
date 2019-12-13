@@ -15,7 +15,7 @@ miners                  : List of active miners
 
 """
 node_host = '<IP>'
-node_port = '<PORT>'
+node_port = 5000
 start_blockchain = True
 miners = []
 
@@ -62,7 +62,7 @@ Encryption Configurations
 aes_key  :  Loads our AES key into the variable
 
 """
-aes_key = open('aes.key', 'r').read().replace("\n", "")
+blockchain_aes_key = open('aes.key', 'r').read().replace("\n", "")
 
 """
 Currency Configurations
