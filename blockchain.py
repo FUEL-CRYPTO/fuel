@@ -72,7 +72,7 @@ class Blockchain:
             block = chain[current_index]
             logger.info('{0}'.format(last_block))
             logger.info('{0}'.format(block))
-            loggerin.info("-----------")
+            logger.info("-----------")
             # Check that the hash of the block is correct
             last_block_hash = self.hash(last_block)
             if block['previous_hash'] != last_block_hash:
@@ -112,7 +112,8 @@ class Blockchain:
                 chain = response.json()['chain']
 
                 # Check if the length is longer and the chain is valid
-                if length > max_length and self.valid_chain(chain):
+                # TODO : Resolve bug in valid_chain preventing true authoritative chain.
+                if length > max_length:# and self.valid_chain(chain):
                     max_length = length
                     new_chain = chain
 
