@@ -38,7 +38,7 @@ Fuel Miner Commands
 
      Command                                Description
      -------                                -----------
-     miner <start|stop|status>              Start mining for Fuel under <address>
+     miner <start|stop|status> <address>    Manage the miners. If 'start' <address> is required
 
 Fuel CLI Commands
 ===================================================================================================

@@ -70,7 +70,7 @@ class Wallet(Cmd):
         print("===================================================================================================\n")
         print("     Command                                Description")
         print("     -------                                -----------")
-        print("     miner <start|stop|status>              Start mining for Fuel under <address>")
+        print("     miner <start|stop|status> <address>    Manage the miners. If 'start' <address> is required")
         print("\n")
         print("Fuel CLI Commands")
         print("===================================================================================================\n")
