@@ -14,7 +14,7 @@ from time import time, sleep
 from urllib.parse import urlparse
 from uuid import uuid4
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect, url_for
 from config import app_name, blockchain_aes_key, backup_storage_dir, backup_file_prefix, blocks_per_backup_file, \
     node_host, node_port, blockchain_address, blockchain_public_key_hash, currency_total_zero, \
     currency_length_formatter, reward, difficulty_string, difficulty_int, miners
@@ -282,10 +282,10 @@ class Blockchain:
 
         if total_blocks != total_saved:
             try:
-                # logger.info("Opening : storage/chain_{0}".format(f_count))
+                logger.info("Opening : storage/chain_{0}".format(f_count))
                 check_blocks_file = open('{0}{1}{2}'.format(backup_storage_dir, backup_file_prefix, f_count), 'r+')
             except:
-                # logger.info("Creating & Opening: storage/chain_{0}".format(f_count))
+                logger.info("Creating & Opening: storage/chain_{0}".format(f_count))
                 open('{0}{1}{2}'.format(backup_storage_dir, backup_file_prefix, f_count), 'x')
                 check_blocks_file = open('{0}{1}{2}'.format(backup_storage_dir,
                                                             backup_file_prefix,
@@ -356,8 +356,8 @@ class Blockchain:
 
             # Add blocks to the storage/chain_[f_count] file
             for link in blockchain.chain[total_saved:]:
-                logger.debug("New blockchain.chain transactions: {0}".format(blockchain.chain[saved_blocks:]))
-                logger.debug("backup.readlines: {0}".format(backup.readlines()))
+                #logger.debug("New blockchain.chain transactions: {0}".format(blockchain.chain[saved_blocks:]))
+                #logger.debug("backup.readlines: {0}".format(backup.readlines()))
                 # try:
                 # if link not in already_saved:
                 if link not in backup.readlines() and link not in already_saved:
@@ -371,15 +371,14 @@ class Blockchain:
                 # except Exception as e:
                 #    logger.error(e)
 
-                logger.debug('saved_blocks: {0} total_blocks: {1} total_saved: {2}'.format(saved_blocks,
-                                                                                           total_blocks,
-                                                                                           total_saved))
-
                 if total_saved == total_blocks:
                     run = False
                     backup.close()
                     return
 
+            logger.debug('saved_blocks: {0} total_blocks: {1} total_saved: {2}'.format(saved_blocks,
+                                                                                      total_blocks,
+                                                                                      total_saved))
             backup.close()
 
     def restore_chain(self):
@@ -446,11 +445,27 @@ blockchain = Blockchain()
 def before_request_func():
     logger.info(request.path)
     print(request.path)
-    routes = ['/mine', '/submit_block', '/transactions/new', '/chain', '/block', '/length', '/nodes', '/nodes/register',
-              '/nodes/resolve', '/account/balance', '/account/register_address', '/last_block', '/circulation']
+    routes = ['/', '/shop', '/mine', '/submit_block', '/transactions/new', '/chain', '/block', '/length', '/nodes', \
+              '/nodes/register', '/nodes/resolve', '/account/balance', '/account/register_address', \
+              '/last_block', '/circulation']
 
     if request.path not in routes:
         return "Invalid route."
+
+#################################################################################################
+# Chain Routes
+#
+# /              : The shop route
+#
+#################################################################################################
+
+@app.route('/', methods=['GET'])
+def index():
+    return "OK"
+
+@app.route('/shop', methods=['GET'])
+def shop():
+    return redirect("https://fuel-crypto.shop")
 
 #################################################################################################
 # Chain Routes
