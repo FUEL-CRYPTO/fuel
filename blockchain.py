@@ -457,7 +457,7 @@ blockchain = Blockchain()
 def before_request_func():
     logger.info(request.path)
     print(request.path)
-    routes = ['/', '/shop', '/mine', '/submit_block', '/transactions/new', '/chain', '/block', '/length', '/nodes', \
+    routes = ['/status', '/mine', '/submit_block', '/transactions/new', '/chain', '/block', '/length', '/nodes', \
               '/nodes/register', '/nodes/resolve', '/account/balance', '/account/register_address', \
               '/last_block', '/circulation']
 
@@ -471,13 +471,9 @@ def before_request_func():
 #
 #################################################################################################
 
-@app.route('/', methods=['GET'])
+@app.route('/status', methods=['GET'])
 def index():
-    return "OK"
-
-@app.route('/shop', methods=['GET'])
-def shop():
-    return redirect("https://fuel-crypto.shop")
+    return "ONLINE"
 
 #################################################################################################
 # Chain Routes
