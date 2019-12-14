@@ -66,15 +66,19 @@ class Blockchain:
 
         while current_index < len(chain):
             block = chain[current_index]
-            #print(f'{last_block}')
-            #print(f'{block}')
-            #print("\n-----------\n")
+            logger.debug(f'last_block: {last_block}')
+            logger.debug(f'block: {block}')
+            logger.debug("\n-----------\n")
+            block2 = chain[current_index-1]
             # Check that the hash of the block is correct
-            if block['previous_hash'] != self.hash(last_block):
+            if self.hash(block2) != self.hash(last_block):
+                logger.debug("valid_chain : previous hash does not match : {0} -> {1}".format(
+                    self.hash(block2), self.hash(last_block)))
                 return False
 
             # Check that the Proof of Work is correct
             if not self.valid_proof(last_block['proof'], block['proof'], last_block['previous_hash']):
+                logger.debug("valid_chain : valid_proof : Bad proof")
                 return False
 
             last_block = block
@@ -101,10 +105,13 @@ class Blockchain:
         # Grab and verify the chains from all the nodes in our network
         for node in neighbours:
             response = requests.get(f'http://{node}/chain')
+            logger.debug("resolve_conflicts : status code : {0}".format(response.status_code))
 
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
+
+                logger.debug("resolve_conflicts : length : {0}".format(length))
 
                 # Check if the length is longer and the chain is valid
                 if length > max_length and self.valid_chain(chain):
@@ -114,8 +121,10 @@ class Blockchain:
         # Replace our chain if we discovered a new, valid chain longer than ours
         if new_chain:
             self.chain = new_chain
+            logger.debug("resolve_conflicts : got new chain!")
             return True
 
+        logger.debug("resolve_conflicts : NO new chain!")
         return False
 
     def new_block(self, proof, previous_hash):
@@ -225,9 +234,13 @@ class Blockchain:
         Validates the Proof
 
         """
+        logger.debug('{0} {1} {2}'.format(last_proof, proof, last_hash))
 
         guess = '{0}{1}{2}'.format(last_proof, proof, last_hash).encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
+
+        logger.debug(guess_hash)
+
         return guess_hash[:difficulty_int] == difficulty_string
 
     #################################################################################################
@@ -293,7 +306,6 @@ class Blockchain:
 
             # Get number of blocks in the current file storage/chain[f_count] file
             saved_blocks = len(check_blocks_file.readlines())
-            logger.debug('saved_blocks: {0}'.format(saved_blocks))
 
             if saved_blocks >= blocks_per_backup_file:
                 f_count += 1
