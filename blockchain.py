@@ -885,6 +885,9 @@ if __name__ == '__main__':
     logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) +1,
                                       len(miners), blockchain.total_coin(), difficulty_int))
 
+    # Register our own node
+    blockchain.register_node("{0}:{1}".format(node_host, node_port))
+
     logger.info("Starting {0} Fuel Blockchain & API..".format(app_name))
     #app.run(host=node_host, port=port, debug=True, threading=False)
     app.run(host=node_ip, port=port, debug=False)

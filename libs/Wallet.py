@@ -89,6 +89,7 @@ class Wallet(Cmd):
     # last            : Return the last block of the blockchain and print the JSON response
     # length          : Return the length of the blockchain
     # register        : Register a new node
+    # nodes           : Display the list of nodes connected to the network
     #
     #################################################################################################
     def do_blockchain(self, args):
@@ -181,6 +182,35 @@ class Wallet(Cmd):
                                           json={"nodes": ["{0}".format(args)]})
 
         print(json.dumps(register_node_req.json(), indent=4, sort_keys=True))
+
+    def do_nodes(self, args):
+        """
+        do_nodes(self, args)
+
+        :param args: <url>
+        :return:
+
+        Display the list of nodes connected to the network
+
+        """
+        # Find the authoritative node
+        longest_chain_node = None
+        longest_chain = 0
+
+        nodes = requests.get('{0}://{1}:{2}/nodes'.format(node_protocol, node_host, node_port)).json()['nodes']
+        #nodes.append('{0}:{1}'.format(node_host, node_port))
+
+        for node in nodes:
+            node_length = requests.get('{0}://{1}/length'.format(node_protocol, node)).json()['length']
+
+            if node_length > longest_chain:
+                longest_chain = node_length
+                longest_chain_node = node
+
+        # Get this list of nodes from the authoritative node
+        registered_nodes = requests.get('{0}://{1}/nodes'.format(node_protocol, longest_chain_node))
+
+        print(json.dumps(registered_nodes.json(), indent=4, sort_keys=True))
 
     #################################################################################################
     # Wallet Functionality
