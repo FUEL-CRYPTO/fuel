@@ -877,7 +877,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('-p', '--port', default=5000, type=int, help='port to listen on')
     args = parser.parse_args()
-    port = node_port if node_port else args.port
+    port = args.port
 
     logger.info("Restoring chains......")
     blockchain.restore_chain()
