@@ -16,7 +16,7 @@ from uuid import uuid4
 import requests
 from flask import Flask, jsonify, request, redirect, url_for
 from config import app_name, blockchain_aes_key, backup_storage_dir, backup_file_prefix, blocks_per_backup_file, \
-    node_protocol, node_host, node_port, blockchain_address, blockchain_public_key_hash, currency_total_zero, \
+    node_protocol, node_host, node_ip, node_port, blockchain_address, blockchain_public_key_hash, currency_total_zero, \
     currency_length_formatter, reward, difficulty_string, difficulty_int, miners
 import threading
 from decimal import *
@@ -887,4 +887,4 @@ if __name__ == '__main__':
 
     logger.info("Starting {0} Fuel Blockchain & API..".format(app_name))
     #app.run(host=node_host, port=port, debug=True, threading=False)
-    app.run(host=node_host, port=port, debug=False)
+    app.run(host=node_ip, port=port, debug=False)
