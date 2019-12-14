@@ -90,6 +90,7 @@ class Wallet(Cmd):
     # length          : Return the length of the blockchain
     # register        : Register a new node
     # nodes           : Display the list of nodes connected to the network
+    # authoritative   : Display the authoritative node
     #
     #################################################################################################
     def do_blockchain(self, args):
@@ -211,6 +212,33 @@ class Wallet(Cmd):
         registered_nodes = requests.get('{0}://{1}/nodes'.format(node_protocol, longest_chain_node))
 
         print(json.dumps(registered_nodes.json(), indent=4, sort_keys=True))
+
+    def do_authoritative(self, args):
+        """
+        do_authoritative(self, args)
+
+        :param args: <url>
+        :return:
+
+        Display the list of nodes connected to the network
+
+        """
+        # Find the authoritative node
+        longest_chain_node = None
+        longest_chain = 0
+
+        nodes = requests.get('{0}://{1}:{2}/nodes'.format(node_protocol, node_host, node_port)).json()['nodes']
+        #nodes.append('{0}:{1}'.format(node_host, node_port))
+
+        for node in nodes:
+            node_length = requests.get('{0}://{1}/length'.format(node_protocol, node)).json()['length']
+
+            if node_length > longest_chain:
+                longest_chain = node_length
+                longest_chain_node = node
+
+        print("Authoritative Node: {0}".format(longest_chain_node))
+        return longest_chain_node
 
     #################################################################################################
     # Wallet Functionality
