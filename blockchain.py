@@ -262,7 +262,7 @@ class Blockchain:
         """
         blockchain.resolve_conflicts()
 
-        threading.Timer(10.0, self.backup_chain).start()
+        threading.Timer(120.0, self.backup_chain).start()
 
         total_saved = 0
         saved_blocks = 0
@@ -883,7 +883,7 @@ if __name__ == '__main__':
     blockchain.restore_chain()
 
     logger.info("Initiating chain backup thread...")
-    threading.Timer(10.0, blockchain.backup_chain).start()
+    threading.Timer(120.0, blockchain.backup_chain).start()
 
     logger.info("Node Address: {0}".format(blockchain_address))
     logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) +1,
