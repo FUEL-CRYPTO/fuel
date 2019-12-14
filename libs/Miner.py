@@ -58,6 +58,30 @@ class Miner(object):
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:difficulty_int] == difficulty_string
 
+    def authoritative_node(self):
+        """
+        authoritative_node(self)
+
+        :return:
+
+        Return the authoritative node we should mine with
+
+        """
+        longest_chain_node = None
+        longest_chain = 0
+
+        nodes = requests.get('{0}://{1}:{2}/nodes'.format(node_protocol, node_host, node_port)).json()['nodes']
+        nodes.append('{0}:{1}'.format(node_host, node_port))
+
+        for node in nodes:
+            node_length = requests.get('{0}://{1}/length'.format(node_protocol, node)).json()['length']
+
+            if node_length > longest_chain:
+                longest_chain = node_length
+                longest_chain_node = node
+
+        return longest_chain_node
+
     def mine(self, address):
         """
         mine(self, address)
@@ -68,6 +92,8 @@ class Miner(object):
         Mine coins for address
 
         """
+        authoritative_node = self.authoritative_node()
+
         public_key = None
         wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallets'), 'r').read())
 
@@ -75,10 +101,10 @@ class Miner(object):
             if address == a['address']:
                 public_key = open(str(a['public_key']), 'r').read()
 
-        last_block = requests.get('{0}://{1}:{2}/last_block'.format(node_protocol, node_host, node_port)).json()
+        last_block = requests.get('{0}://{1}/last_block'.format(node_protocol, authoritative_node)).json()
         proof = self.proof_of_work(last_block)
 
-        submit_and_check = requests.post('{0}://{1}:{2}/submit_block'.format(node_protocol, node_host, node_port),
+        submit_and_check = requests.post('{0}://{1}/submit_block'.format(node_protocol, authoritative_node),
                                          headers={"Content-Type": "application/json"},
                                          json={
                                                 'solved_block': last_block,
