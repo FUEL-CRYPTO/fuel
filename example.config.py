@@ -8,14 +8,16 @@ app_name = "Fuel"
 """
 Node Configurations
 
+node_protocol           : The protocol used by all nodes in your blockchain (http|https)
 node_host               : The node's IP address. Example: 123.123.123.123
 node_port               : The node's web port. Example: 5000
 start_blockchain        : Start the blockchain at run
 miners                  : List of active miners
 
 """
+node_protocol = 'https'
 node_host = '<IP>'
-node_port = 5000
+node_port = 443
 start_blockchain = True
 miners = []
 

@@ -13,7 +13,7 @@ from uuid import uuid4
 import os
 from decimal import *
 from threading import Thread
-from config import node_host, node_port, address, public_key, public_key_hash, difficulty_int, difficulty_string
+from config import node_protocol, node_host, node_port, address, public_key, public_key_hash, difficulty_int, difficulty_string
 from libs.Logger import logger
 
 miner_threads = []
@@ -75,10 +75,10 @@ class Miner(object):
             if address == a['address']:
                 public_key = open(str(a['public_key']), 'r').read()
 
-        last_block = requests.get('http://{0}:{1}/last_block'.format(node_host, node_port)).json()
+        last_block = requests.get('{0}://{1}:{2}/last_block'.format(node_protocol, node_host, node_port)).json()
         proof = self.proof_of_work(last_block)
 
-        submit_and_check = requests.post('http://{0}:{1}/submit_block'.format(node_host, node_port),
+        submit_and_check = requests.post('{0}://{1}:{2}/submit_block'.format(node_protocol, node_host, node_port),
                                          headers={"Content-Type": "application/json"},
                                          json={
                                                 'solved_block': last_block,

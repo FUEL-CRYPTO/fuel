@@ -16,7 +16,7 @@ from cmd import Cmd
 from decimal import Decimal
 from libs import Colors, Miner, Banners
 from libs.Keys import create_address, check_keys, generate_key, generate_public_key, generate_private_key
-from config import app_name, node_host, node_port, wallets, address, miners, public_key, public_key_hash, \
+from config import app_name, node_protocol, node_host, node_port, wallets, address, miners, public_key, public_key_hash, \
     currency_total_zero, currency_length_formatter, difficulty_int
 from libs.Logger import logger
 
@@ -131,7 +131,7 @@ class Wallet(Cmd):
 
         index = int(args)
 
-        index_req = requests.post('http://{0}:{1}/block'.format(node_host, node_port),
+        index_req = requests.post('{0}://{1}:{2}/block'.format(node_protocol, node_host, node_port),
                                   headers={"Content-Type": "application/json"},
                                   json={"index": int(index)})
 
@@ -147,7 +147,7 @@ class Wallet(Cmd):
         Return the last block of the blockchain and print the JSON response
 
         """
-        index_req = requests.get('http://{0}:{1}/last_block'.format(node_host, node_port))
+        index_req = requests.get('{0}://{1}:{2}/last_block'.format(node_protocol, node_host, node_port))
         print(json.dumps(index_req.json(), indent=4, sort_keys=True))
 
     def do_length(self, args):
@@ -160,7 +160,7 @@ class Wallet(Cmd):
         Return the length of the blockchain
 
         """
-        index_req = requests.get('http://{0}:{1}/length'.format(node_host, node_port))
+        index_req = requests.get('{0}://{1}:{2}/length'.format(node_protocol, node_host, node_port))
         print(index_req.json()['length'])
 
     def do_register(self, args):
@@ -174,9 +174,9 @@ class Wallet(Cmd):
 
         """
         if not args:
-            args = input("URL (http://123.123.123.123:5000): ")
+            args = input("URL ({0}://123.123.123.123:5000): ".format(node_protocol))
 
-        register_node_req = requests.post('http://{0}:{1}/nodes/register'.format(node_host, node_port),
+        register_node_req = requests.post('{0}://{1}:{2}/nodes/register'.format(node_protocol, node_host, node_port),
                                           headers={"Content-Type": "application/json"},
                                           json={"nodes": ["{0}".format(args)]})
 
@@ -208,7 +208,7 @@ class Wallet(Cmd):
 
         total = Decimal(currency_total_zero)
 
-        chain_req = requests.get('http://{0}:{1}/chain'.format(node_host, node_port))
+        chain_req = requests.get('{0}://{1}:{2}/chain'.format(node_protocol, node_host, node_port))
 
         chain = chain_req.json()['chain']
 
@@ -291,7 +291,7 @@ class Wallet(Cmd):
             recipient = args.split(" ")[0]
             amount = args.split(" ")[1]
 
-        index_req = requests.post('http://{0}:{1}/transactions/new'.format(node_host, node_port),
+        index_req = requests.post('{0}://{1}:{2}/transactions/new'.format(node_protocol, node_host, node_port),
                                   headers={"Content-Type": "application/json"},
                                   json={"sender": address,
                                         "recipient": recipient,
@@ -401,10 +401,11 @@ class Wallet(Cmd):
         Display the Fuel banner with statistics
 
         """
-        nodes = len(requests.get('http://{0}:{1}/nodes'.format(node_host, node_port)).json()['nodes'])
-        length = requests.get('http://{0}:{1}/length'.format(node_host, node_port)).json()['length']
+        nodes = len(requests.get('{0}://{1}:{2}/nodes'.format(node_protocol, node_host, node_port)).json()['nodes'])
+        length = requests.get('{0}://{1}:{2}/length'.format(node_protocol, node_host, node_port)).json()['length']
         miners = 0
-        circu = requests.get('http://{0}:{1}/circulation'.format(node_host, node_port)).json()['circulation']
+        circu = requests.get('{0}://{1}:{2}/circulation'.format(node_protocol, node_host, node_port)
+                             ).json()['circulation']
 
         try:
             #n = random.randint(0, 2)

@@ -16,7 +16,7 @@ from uuid import uuid4
 import requests
 from flask import Flask, jsonify, request, redirect, url_for
 from config import app_name, blockchain_aes_key, backup_storage_dir, backup_file_prefix, blocks_per_backup_file, \
-    node_host, node_port, blockchain_address, blockchain_public_key_hash, currency_total_zero, \
+    node_protocol, node_host, node_port, blockchain_address, blockchain_public_key_hash, currency_total_zero, \
     currency_length_formatter, reward, difficulty_string, difficulty_int, miners
 import threading
 from decimal import *
@@ -40,7 +40,7 @@ class Blockchain:
         """
         register_node(self, address)
 
-        :param address: Address of node. Eg. 'http://<server-ip>:<port>'
+        :param address: Address of node. Eg. 'https://<server-ip>:<port>'
 
         Add a new node to the list of nodes
 
@@ -104,7 +104,7 @@ class Blockchain:
 
         # Grab and verify the chains from all the nodes in our network
         for node in neighbours:
-            response = requests.get(f'http://{node}/chain')
+            response = requests.get(f'{node_protocol}://{node}/chain')
             logger.debug("resolve_conflicts : status code : {0}".format(response.status_code))
 
             if response.status_code == 200:
@@ -567,7 +567,7 @@ def register_nodes():
     """
     register_node()
 
-    :nodes: A list of nodes. Ex: ['http://1.2.3.4:5000', 'http://5.6.7.8:5000']
+    :nodes: A list of nodes. Ex: ['https://1.2.3.4:5000', 'https://5.6.7.8:5000']
     :return: JSON response
 
     Add a new node to our list of nodes
