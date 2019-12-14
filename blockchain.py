@@ -57,29 +57,24 @@ class Blockchain:
 
     def valid_chain(self, chain):
         """
-        valid_chain(self, chain)
-
-        :param chain: A blockchain
-        :return: True if valid, False if not
-
         Determine if a given blockchain is valid
-
+        :param chain: <list> A blockchain
+        :return: <bool> True if valid, False if not
         """
         last_block = chain[0]
         current_index = 1
 
         while current_index < len(chain):
             block = chain[current_index]
-            logger.info('{0}'.format(last_block))
-            logger.info('{0}'.format(block))
-            logger.info("-----------")
+            #print(f'{last_block}')
+            #print(f'{block}')
+            #print("\n-----------\n")
             # Check that the hash of the block is correct
-            last_block_hash = self.hash(last_block)
-            if block['previous_hash'] != last_block_hash:
+            if block['previous_hash'] != self.hash(last_block):
                 return False
 
             # Check that the Proof of Work is correct
-            if not self.valid_proof(last_block['proof'], block['proof'], last_block_hash):
+            if not self.valid_proof(last_block['proof'], block['proof'], last_block['previous_hash']):
                 return False
 
             last_block = block
@@ -112,8 +107,7 @@ class Blockchain:
                 chain = response.json()['chain']
 
                 # Check if the length is longer and the chain is valid
-                # TODO : Resolve bug in valid_chain preventing true authoritative chain.
-                if length > max_length:# and self.valid_chain(chain):
+                if length > max_length and self.valid_chain(chain):
                     max_length = length
                     new_chain = chain
 
