@@ -875,6 +875,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     port = args.port
 
+    print(os.path.dirname(os.path.realpath(__file__)))
+
     logger.info("Restoring chains......")
     blockchain.restore_chain()
 

@@ -71,7 +71,7 @@ class Miner(object):
         longest_chain = 0
 
         nodes = requests.get('{0}://{1}:{2}/nodes'.format(node_protocol, node_host, node_port)).json()['nodes']
-        #nodes.append('{0}:{1}'.format(node_host, node_port))
+        nodes.append('{0}:{1}'.format(node_host, node_port))
 
         for node in nodes:
             node_length = requests.get('{0}://{1}/length'.format(node_protocol, node)).json()['length']
