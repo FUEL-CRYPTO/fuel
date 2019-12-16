@@ -19,7 +19,7 @@ from libs.Keys import create_address, check_keys, generate_key, generate_public_
 from config import app_name, node_protocol, node_host, node_port, wallets, address, miners, public_key, public_key_hash, \
     currency_total_zero, currency_length_formatter, difficulty_int
 from libs.Logger import logger
-
+from libs.Functions import authoritative_node
 
 miner = Miner.Miner()
 colors = Colors.Colors()
@@ -223,22 +223,8 @@ class Wallet(Cmd):
         Display the list of nodes connected to the network
 
         """
-        # Find the authoritative node
-        longest_chain_node = None
-        longest_chain = 0
-
-        nodes = requests.get('{0}://{1}:{2}/nodes'.format(node_protocol, node_host, node_port)).json()['nodes']
-        #nodes.append('{0}:{1}'.format(node_host, node_port))
-
-        for node in nodes:
-            node_length = requests.get('{0}://{1}/length'.format(node_protocol, node)).json()['length']
-
-            if node_length > longest_chain:
-                longest_chain = node_length
-                longest_chain_node = node
-
+        longest_chain_node = authoritative_node()
         print("Authoritative Node: {0}".format(longest_chain_node))
-        return longest_chain_node
 
     #################################################################################################
     # Wallet Functionality

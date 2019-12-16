@@ -66,9 +66,9 @@ class Blockchain:
 
         while current_index < len(chain):
             block = chain[current_index]
-            logger.debug(f'last_block: {last_block}')
-            logger.debug(f'block: {block}')
-            logger.debug("\n-----------\n")
+            #logger.debug(f'last_block: {last_block}')
+            #logger.debug(f'block: {block}')
+            #logger.debug("\n-----------\n")
             block2 = chain[current_index-1]
             # Check that the hash of the block is correct
             if self.hash(block2) != self.hash(last_block):
@@ -78,7 +78,8 @@ class Blockchain:
 
             # Check that the Proof of Work is correct
             if not self.valid_proof(last_block['proof'], block['proof'], last_block['previous_hash']):
-                logger.debug("valid_chain : valid_proof : Bad proof")
+                logger.debug("valid_chain : valid_proof : Bad proof : {0}, {1}, {2} ".format(
+                    last_block['proof'], block['proof'], last_block['previous_hash']))
                 return False
 
             last_block = block
@@ -234,12 +235,12 @@ class Blockchain:
         Validates the Proof
 
         """
-        logger.debug('{0} {1} {2}'.format(last_proof, proof, last_hash))
+        #logger.debug('{0} {1} {2}'.format(last_proof, proof, last_hash))
 
         guess = '{0}{1}{2}'.format(last_proof, proof, last_hash).encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
 
-        logger.debug(guess_hash)
+        #logger.debug(guess_hash)
 
         return guess_hash[:difficulty_int] == difficulty_string
 
