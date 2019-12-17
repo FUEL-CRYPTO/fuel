@@ -105,19 +105,21 @@ class Blockchain:
 
         # Grab and verify the chains from all the nodes in our network
         for node in neighbours:
-            response = requests.get(f'{node_protocol}://{node}/chain')
-            logger.debug("resolve_conflicts : status code : {0}".format(response.status_code))
+            # We want to ignore our own node
+            if node != "{0}".format(node_host) and node != "{0}:{1}".format(node_host, node_port):
+                response = requests.get(f'{node_protocol}://{node}/chain')
+                logger.debug("resolve_conflicts : status code : {0}".format(response.status_code))
 
-            if response.status_code == 200:
-                length = response.json()['length']
-                chain = response.json()['chain']
+                if response.status_code == 200:
+                    length = response.json()['length']
+                    chain = response.json()['chain']
 
-                logger.debug("resolve_conflicts : length : {0}".format(length))
+                    logger.debug("resolve_conflicts : length : {0}".format(length))
 
-                # Check if the length is longer and the chain is valid
-                if length > max_length and self.valid_chain(chain):
-                    max_length = length
-                    new_chain = chain
+                    # Check if the length is longer and the chain is valid
+                    if length > max_length and self.valid_chain(chain):
+                        max_length = length
+                        new_chain = chain
 
         # Replace our chain if we discovered a new, valid chain longer than ours
         if new_chain:
@@ -488,8 +490,8 @@ def get_chain():
 
     :return: JSON response
 
-    Return a the full chain and chain length if the request comes from another node.
-    If the request comes from a wallet or API user, return the modified chain, hiding the public key hashes
+    Return a the full chain and chain length or the chain and length starting at <index> at a specific starting point.
+    Returning the chain from a specific starting <index> can be used for bootstraping the chain.
 
     """
 
