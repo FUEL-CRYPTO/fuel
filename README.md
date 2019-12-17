@@ -13,10 +13,12 @@ Fuel Blockchain Commands
 
      Command                                Description
      -------                                -----------
+     authoritative                          Display the authoritative node
      blockchain <start|stop|status>         Manage the blockchain process
      block <index>                          Display a block in the blockchain
      last                                   Display the last block in the blockchain
      length                                 Display the current blockchain length
+     nodes                                  Display the list of nodes connected to the network
      register <protocol>://<ip>:<port>      Register a new node on the blockchain network
 
 

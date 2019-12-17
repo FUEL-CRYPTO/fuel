@@ -50,10 +50,12 @@ class Wallet(Cmd):
         print("===================================================================================================\n")
         print("     Command                                Description")
         print("     -------                                -----------")
+        print("     authoritative                          Display the authoritative node")
         print("     blockchain <start|stop|status>         Manage the blockchain process")
         print("     block <index>                          Display a block in the blockchain")
         print("     last                                   Display the last block in the blockchain")
         print("     length                                 Display the current blockchain length")
+        print("     nodes                                  Display the list of nodes connected to the network")
         print("     register <protocol>://<ip>:<port>      Register a new node on the blockchain network")
         print("\n")
         print("Fuel Wallet Commands")
@@ -85,13 +87,13 @@ class Wallet(Cmd):
     #################################################################################################
     # Blockchain Functionality
     #
+    # authoritative   : Display the authoritative node
     # blockchain      : Manage the blockchain process
     # block           : Return a block and print the JSON response
     # last            : Return the last block of the blockchain and print the JSON response
     # length          : Return the length of the blockchain
-    # register        : Register a new node
     # nodes           : Display the list of nodes connected to the network
-    # authoritative   : Display the authoritative node
+    # register        : Register a new node
     #
     #################################################################################################
     def do_blockchain(self, args):
