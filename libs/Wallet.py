@@ -14,6 +14,7 @@ import random
 import hashlib
 from cmd import Cmd
 from decimal import Decimal
+from time import sleep
 from libs import Colors, Miner, Banners
 from libs.Keys import create_address, check_keys, generate_key, generate_public_key, generate_private_key
 from config import app_name, node_protocol, node_host, node_port, wallets, address, miners, public_key, public_key_hash, \
@@ -467,15 +468,24 @@ class Wallet(Cmd):
         Exit the wallet
 
         """
-        miner.stop_mining()
-        print("Stopping the miner and {}exiting.\n{}".format(colors.FAIL, colors.ENDC))
-        global blockchain_proc
+        status = requests.get('{0}://{1}:{2}/status'.format(node_protocol, node_host, node_port)).text
 
-        if blockchain_proc:
-            blockchain_proc.terminate()
-            print("Blockchain has been stopped!")
+        if status != "RESOLVING":
+            print("{0}Stopping the miner....{1}".format(colors.FAIL, colors.ENDC))
+            miner.stop_mining()
+            global blockchain_proc
 
-        raise SystemExit
+            sleep(5)
+
+            if blockchain_proc:
+                blockchain_proc.terminate()
+                print("Blockchain has been stopped!")
+
+            sleep(2)
+
+            raise SystemExit
+        else:
+            print("Blockchain is currently being resolved and saved. Please try again in few moments.")
 
     def do_quit(self, args):
         """
@@ -487,16 +497,24 @@ class Wallet(Cmd):
         Exit the application
 
         """
-        miner.stop_mining()
-        print("Stopping the miner and {}exiting.\n{}".format(colors.FAIL, colors.ENDC))
+        status = requests.get('{0}://{1}:{2}/status'.format(node_protocol, node_host, node_port)).text
 
-        global blockchain_proc
+        if status != "RESOLVING":
+            print("{0}Stopping the miner...{1}".format(colors.FAIL, colors.ENDC))
+            miner.stop_mining()
+            global blockchain_proc
 
-        if blockchain_proc:
-            blockchain_proc.terminate()
-            print("Blockchain has been stopped!")
+            sleep(5)
 
-        raise SystemExit
+            if blockchain_proc:
+                blockchain_proc.terminate()
+                print("Blockchain has been stopped!")
+
+            sleep(2)
+
+            raise SystemExit
+        else:
+            print("Blockchain is currently being resolved and saved. Please try again in few moments.")
 
     def do_update(self, args):
         """

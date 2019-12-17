@@ -27,6 +27,8 @@ from cryptography.hazmat.backends import default_backend as crypto_default_backe
 
 cipher = AESCipher.AESCipher(blockchain_aes_key)
 
+resolving_conflicts = False
+
 class Blockchain:
     def __init__(self):
         self.current_transactions = []
@@ -159,10 +161,10 @@ class Blockchain:
         """
         new_transaction(self, sender, recipient, amount, hash)
 
-        :param sender: Address of the Sender
-        :param recipient: Address of the Recipient
-        :param amount: Amount
-        :param hash: Owners public key hash value
+        :param sender: <string> Address of the Sender
+        :param recipient: <string> Address of the Recipient
+        :param amount: <string> Amount
+        :param hash: <string>  Owners public key hash value
         :return: The index of the Block that will hold this transaction
 
         Creates a new transaction to go into the next mined Block
@@ -263,6 +265,8 @@ class Blockchain:
         Backup the blockchain.chain on a 10 second interval
 
         """
+        resolving_conflicts = True
+
         blockchain.resolve_conflicts()
 
         threading.Timer(120.0, self.backup_chain).start()
@@ -395,6 +399,7 @@ class Blockchain:
                                                                                       total_blocks,
                                                                                       total_saved))
             backup.close()
+            resolving_conflicts = False
 
     def restore_chain(self):
         """
@@ -458,6 +463,14 @@ blockchain = Blockchain()
 
 @app.before_request
 def before_request_func():
+    """
+    before_request_func()
+
+    :return:
+
+    Return "Invalid route." if the route does not exist.
+
+    """
     routes = ['/status', '/mine', '/submit_block', '/transactions/new', '/chain', '/block', '/length', '/nodes', \
               '/nodes/register', '/nodes/resolve', '/account/balance', '/account/register_address', \
               '/last_block', '/circulation']
@@ -473,8 +486,21 @@ def before_request_func():
 #################################################################################################
 
 @app.route('/status', methods=['GET'])
-def index():
-    return "ONLINE"
+def status():
+    """
+    status()
+
+    :return: ONLINE
+
+    Returns an ONLINE message
+
+    """
+    status = "ONLINE"
+
+    if resolving_conflicts:
+        status = "RESOLVING"
+
+    return status
 
 #################################################################################################
 # Chain Routes
@@ -523,11 +549,17 @@ def get_chain():
 
 @app.route('/nodes', methods=['GET'])
 def nodes():
+    """
+    nodes()
+
+    :return: JSON response
+
+    Return the current list of nodes registered with this node
+
+    """
     lst = []
     for n in blockchain.nodes:
         lst.append(n)
-
-    logger.info(blockchain.nodes)
 
     response = {
         "nodes": lst
@@ -539,7 +571,7 @@ def consensus():
     """
     consensus()
 
-    :return:
+    :return: JSON response
 
     Consensus algorithm. Calls resolve_conflicts()
 
@@ -564,7 +596,7 @@ def register_nodes():
     """
     register_node()
 
-    :nodes: A list of nodes. Ex: ['https://1.2.3.4:5000', 'https://5.6.7.8:5000']
+    :nodes: <list> A list of nodes. Ex: ['https://1.2.3.4:5000', 'https://5.6.7.8:5000']
     :return: JSON response
 
     Add a new node to our list of nodes
@@ -662,7 +694,7 @@ def get_last_block():
     """
      get_last_block()
 
-    :return:
+    :return: JSON response
 
     Return the blockchain's last block
 
@@ -746,10 +778,10 @@ def new_transaction():
     """
     new_transaction()
 
-    :sender: Senders address
-    :recipient: Recipients address
-    :amount: Amount to be sent
-    :public_key: Public key of the sender to verify ownership
+    :sender: <string> Senders address
+    :recipient: <string> Recipients address
+    :amount: <string> Amount to be sent
+    :public_key: <string> Public key of the sender to verify ownership
     :return: JSON response
 
     Create a new transaction and return a JSON response
@@ -801,7 +833,7 @@ def get_circulation():
     """
     get_circulation()
 
-    :return:
+    :return: JSON response
 
     Return the blockchains total coin in circulation
 
@@ -816,7 +848,7 @@ def account_balance():
     """
     account_balance()
 
-    :return:
+    :return: JSON response
 
     Return balance of an address
 
@@ -847,7 +879,7 @@ def register_address():
     register_address()
 
     :hash: The public_key hashed of the address owner
-    :return:
+    :return: JSON response
 
     Return a new address registered to the public_key hash
 
