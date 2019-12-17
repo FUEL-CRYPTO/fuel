@@ -1,4 +1,5 @@
 import requests
+from config import node_protocol, node_host, node_port
 
 def authoritative_node():
     """

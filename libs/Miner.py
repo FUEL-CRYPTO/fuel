@@ -69,7 +69,7 @@ class Miner(object):
         Mine coins for address
 
         """
-        authoritative_node = authoritative_node()
+        an = authoritative_node()
 
         public_key = None
         wallets = json.loads(open('{0}/{1}'.format(os.getcwd(), 'wallets'), 'r').read())
@@ -78,10 +78,10 @@ class Miner(object):
             if address == a['address']:
                 public_key = open(str(a['public_key']), 'r').read()
 
-        last_block = requests.get('{0}://{1}/last_block'.format(node_protocol, authoritative_node)).json()
+        last_block = requests.get('{0}://{1}/last_block'.format(node_protocol, an)).json()
         proof = self.proof_of_work(last_block)
 
-        submit_and_check = requests.post('{0}://{1}/submit_block'.format(node_protocol, authoritative_node),
+        submit_and_check = requests.post('{0}://{1}/submit_block'.format(node_protocol, an),
                                          headers={"Content-Type": "application/json"},
                                          json={
                                                 'solved_block': last_block,
@@ -91,7 +91,16 @@ class Miner(object):
                                               }
                                          )
 
-        submission_response = submit_and_check.json()
+        try:
+            submission_response = submit_and_check.json()
+        except json.JSONDecodeError:
+            sleep(5)
+            try:
+                submission_response = submit_and_check.json()
+            except json.JSONDecodeError:
+                sleep(10)
+                logger.debug("WTF?")
+                self.run_miner(address)
 
         self.run_miner(address)
 

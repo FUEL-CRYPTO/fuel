@@ -456,8 +456,6 @@ blockchain = Blockchain()
 
 @app.before_request
 def before_request_func():
-    logger.info(request.path)
-    print(request.path)
     routes = ['/status', '/mine', '/submit_block', '/transactions/new', '/chain', '/block', '/length', '/nodes', \
               '/nodes/register', '/nodes/resolve', '/account/balance', '/account/register_address', \
               '/last_block', '/circulation']
@@ -468,7 +466,7 @@ def before_request_func():
 #################################################################################################
 # Chain Routes
 #
-# /              : The shop route
+# /status              : The status route
 #
 #################################################################################################
 
