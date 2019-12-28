@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import datetime
 from os import listdir, system
 from os.path import isfile, join, exists
 from libs.Keys import check_keys
@@ -729,13 +730,33 @@ def submit_block():
     global miners
     values = request.get_json()
 
+    # Submitter values
     solved_block = values.get('solved_block')
     proof = values.get('proof_of_work')
     address = values.get('address')
     public_key = values.get('public_key')
 
-    if address not in miners:
-        miners.append(address)
+    # Track the number of miners
+    # we want adjust the reward divided by the number of miners - 1 and the percentage already awarded to the solver
+    # and reward each miner its portion of a coin for attempting
+    # to solve the solution
+
+    # Add any miners we are not tracking
+    if not any(miner['address'] == address for miner in miners):
+        miners.append({'address': address, 'public_key': public_key, 'last_seen': datetime.datetime.now()})
+
+    # Remove any miners we have not seen in over 5 minutes
+    miner_count = 0
+    for miner in miners:
+        last_seen = miner['last_seen']
+        now = datetime.datetime.now()
+        duration = now - last_seen
+        duration_in_s = duration.total_seconds()
+
+        if int(duration_in_s) > 300: # 5 minutes
+            miners.pop(miner_count)
+        miner_count += 1
+
 
     # Check that the Proof of Work is correct
     if not blockchain.valid_proof(blockchain.last_block['proof'], proof, blockchain.last_block['previous_hash']):
@@ -744,14 +765,48 @@ def submit_block():
         }
         return jsonify(response), 200
 
+
+    # Set the default reward values
+    solver_reward = reward
+    helper_reward = None
+
+    # If there is only 1 miner
+    if len(miners) == 1:
+        solver_reward = Decimal(reward)
+        helper_reward = None
+
+    # If there are 2 or more miners
+    if len(miners) >= 2:
+        solver_reward = (Decimal(reward) - (Decimal(reward) / 2))
+        helper_reward = currency_length_formatter.format((Decimal(reward) - (Decimal(reward) / 2)) / (len(miners) - 1))
+
+
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
-    blockchain.new_transaction(
-        sender="0",
-        recipient=address,
-        amount=currency_length_formatter.format(Decimal(reward)),
-        hash=hashlib.sha256(public_key.encode()).hexdigest()
-    )
+    # Give solver full reward or each miner a portion of reward, if there are more than 1 miner
+    if len(miners) == 1:
+        blockchain.new_transaction(
+            sender="0",
+            recipient=address,
+            amount=currency_length_formatter.format(solver_reward),
+            hash=hashlib.sha256(public_key.encode()).hexdigest()
+        )
+    elif len(miners) > 1:
+        for miner in miners:
+            if miner['address'] != address:
+                blockchain.new_transaction(
+                    sender="0",
+                    recipient=miner['address'],
+                    amount=currency_length_formatter.format(helper_reward),
+                    hash=hashlib.sha256(miner['public_key'].encode()).hexdigest()
+                )
+            elif miner['address'] == address:
+                blockchain.new_transaction(
+                    sender="0",
+                    recipient=address,
+                    amount=currency_length_formatter.format(solver_reward),
+                    hash=hashlib.sha256(public_key.encode()).hexdigest()
+                )
 
     # Forge the new Block by adding it to the chain
     previous_hash = blockchain.hash(solved_block)
@@ -764,6 +819,7 @@ def submit_block():
         'proof': block['proof'],
         'previous_hash': block['previous_hash'],
     }
+
     return jsonify(response), 200
 
 #################################################################################################
