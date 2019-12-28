@@ -772,12 +772,12 @@ def submit_block():
 
     # If there is only 1 miner
     if len(miners) == 1:
-        solver_reward = Decimal(reward)
+        solver_reward = currency_length_formatter.format(Decimal(reward))
         helper_reward = None
 
     # If there are 2 or more miners
     if len(miners) >= 2:
-        solver_reward = (Decimal(reward) - (Decimal(reward) / 2))
+        solver_reward = currency_length_formatter.format((Decimal(reward) - (Decimal(reward) / 2)))
         helper_reward = currency_length_formatter.format((Decimal(reward) - (Decimal(reward) / 2)) / (len(miners) - 1))
 
 
@@ -788,7 +788,7 @@ def submit_block():
         blockchain.new_transaction(
             sender="0",
             recipient=address,
-            amount=currency_length_formatter.format(solver_reward),
+            amount=solver_reward,
             hash=hashlib.sha256(public_key.encode()).hexdigest()
         )
     elif len(miners) > 1:
@@ -797,14 +797,14 @@ def submit_block():
                 blockchain.new_transaction(
                     sender="0",
                     recipient=miner['address'],
-                    amount=currency_length_formatter.format(helper_reward),
+                    amount=helper_reward,
                     hash=hashlib.sha256(miner['public_key'].encode()).hexdigest()
                 )
             elif miner['address'] == address:
                 blockchain.new_transaction(
                     sender="0",
                     recipient=address,
-                    amount=currency_length_formatter.format(solver_reward),
+                    amount=solver_reward,
                     hash=hashlib.sha256(public_key.encode()).hexdigest()
                 )
 
