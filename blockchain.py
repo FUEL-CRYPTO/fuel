@@ -266,6 +266,8 @@ class Blockchain:
         Backup the blockchain.chain on a 10 second interval
 
         """
+        blockchain.restore_chain()
+        
         resolving_conflicts = True
 
         blockchain.resolve_conflicts()
