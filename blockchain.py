@@ -5,6 +5,7 @@ import datetime
 from os import listdir, system
 from os.path import isfile, join, exists
 from libs.Keys import check_keys
+
 check_keys(os.path.dirname(os.path.realpath(__file__)))
 
 from libs.Logger import logger
@@ -26,9 +27,11 @@ from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend as crypto_default_backend
 
-cipher = AESCipher.AESCipher(blockchain_aes_key)
+# cipher = AESCipher.AESCipher(blockchain_aes_key)
+cipher = AESCipher.AESCipher(bytes(blockchain_aes_key, 'utf-8'))
 
 resolving_conflicts = False
+
 
 class Blockchain:
     def __init__(self):
@@ -57,7 +60,6 @@ class Blockchain:
         else:
             raise ValueError('Invalid URL')
 
-
     def valid_chain(self, chain):
         """
         Determine if a given blockchain is valid
@@ -69,10 +71,10 @@ class Blockchain:
 
         while current_index < len(chain):
             block = chain[current_index]
-            #logger.debug(f'last_block: {last_block}')
-            #logger.debug(f'block: {block}')
-            #logger.debug("\n-----------\n")
-            block2 = chain[current_index-1]
+            # logger.debug(f'last_block: {last_block}')
+            # logger.debug(f'block: {block}')
+            # logger.debug("\n-----------\n")
+            block2 = chain[current_index - 1]
             # Check that the hash of the block is correct
             if self.hash(block2) != self.hash(last_block):
                 logger.debug("valid_chain : previous hash does not match : {0} -> {1}".format(
@@ -106,6 +108,10 @@ class Blockchain:
         # We're only looking for chains longer than ours
         max_length = len(self.chain)
 
+        # TODO:
+        #   1. If chain is the same length (Ex: new blockchain network with 2 new nodes and only the starting block)
+        #       nodes should update their initial block to the authoritative server block
+
         # Grab and verify the chains from all the nodes in our network
         for node in neighbours:
             # We want to ignore our own node
@@ -123,14 +129,27 @@ class Blockchain:
                     if length > max_length and self.valid_chain(chain):
                         max_length = length
                         new_chain = chain
+                        logger.debug("resolve_conflicts : Chain updated via length")
+
+                    # TODO: Verify if this will cause issues when NodeA may catch up to NodeB?
+                    # Check if length is the same and chain is valid,
+                    elif length == max_length and self.valid_chain(chain):
+                        my_ts = int(self.chain[0]['timestamp'])
+                        node_ts = int(chain[0]['timestamp'])
+                        # then we probably have 2 nodes starting up for the first time,
+                        # at the same time, so we compare the timestamps of the first chain block
+                        if self.chain[0]['timestamp'] < chain[0]['timestamp']:
+                            max_length = length
+                            new_chain = chain
+                            logger.debug("resolve_conflicts : Chain updated via same length but newer last block")
 
         # Replace our chain if we discovered a new, valid chain longer than ours
         if new_chain:
             self.chain = new_chain
             logger.debug("resolve_conflicts : got new chain!")
             return True
-
-        logger.debug("resolve_conflicts : NO new chain!")
+        else:
+            logger.debug("resolve_conflicts : NO new chain!")
         return False
 
     def new_block(self, proof, previous_hash):
@@ -240,12 +259,12 @@ class Blockchain:
         Validates the Proof
 
         """
-        #logger.debug('{0} {1} {2}'.format(last_proof, proof, last_hash))
+        # logger.debug('{0} {1} {2}'.format(last_proof, proof, last_hash))
 
         guess = '{0}{1}{2}'.format(last_proof, proof, last_hash).encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
 
-        #logger.debug(guess_hash)
+        # logger.debug(guess_hash)
 
         return guess_hash[:difficulty_int] == difficulty_string
 
@@ -266,13 +285,13 @@ class Blockchain:
         Backup the blockchain.chain on a 10 second interval
 
         """
-        blockchain.restore_chain()
-        
+        #blockchain.restore_chain()
+
         resolving_conflicts = True
 
         blockchain.resolve_conflicts()
 
-        threading.Timer(120.0, self.backup_chain).start()
+        threading.Timer(300.0, self.backup_chain).start()
 
         total_saved = 0
         saved_blocks = 0
@@ -378,8 +397,8 @@ class Blockchain:
 
             # Add blocks to the storage/chain_[f_count] file
             for link in blockchain.chain[total_saved:]:
-                #logger.debug("New blockchain.chain transactions: {0}".format(blockchain.chain[saved_blocks:]))
-                #logger.debug("backup.readlines: {0}".format(backup.readlines()))
+                # logger.debug("New blockchain.chain transactions: {0}".format(blockchain.chain[saved_blocks:]))
+                # logger.debug("backup.readlines: {0}".format(backup.readlines()))
                 # try:
                 # if link not in already_saved:
                 if link not in backup.readlines() and link not in already_saved:
@@ -399,8 +418,8 @@ class Blockchain:
                     return
 
             logger.debug('saved_blocks: {0} total_blocks: {1} total_saved: {2}'.format(saved_blocks,
-                                                                                      total_blocks,
-                                                                                      total_saved))
+                                                                                       total_blocks,
+                                                                                       total_saved))
             backup.close()
             resolving_conflicts = False
 
@@ -451,11 +470,13 @@ class Blockchain:
 
         return currency_length_formatter.format(total)
 
+
 # Instantiate the Node
 app = Flask(__name__)
 
 # Instantiate the Blockchain
 blockchain = Blockchain()
+
 
 #################################################################################################
 # Before Request
@@ -481,6 +502,7 @@ def before_request_func():
     if request.path not in routes:
         return "Invalid route."
 
+
 #################################################################################################
 # Chain Routes
 #
@@ -504,6 +526,7 @@ def status():
         status = "RESOLVING"
 
     return status
+
 
 #################################################################################################
 # Chain Routes
@@ -536,10 +559,11 @@ def get_chain():
     else:
         # Return the next 100 results starting at the value of index
         response = {
-            'chain': blockchain.chain[int(values['index']):int(values['index'])+500],
+            'chain': blockchain.chain[int(values['index']):int(values['index']) + 500],
             'length': len(blockchain.chain),
         }
         return jsonify(response), 200
+
 
 #################################################################################################
 # Nodes Routes
@@ -569,6 +593,7 @@ def nodes():
     }
     return jsonify(response), 200
 
+
 @app.route('/nodes/resolve', methods=['GET'])
 def consensus():
     """
@@ -593,6 +618,7 @@ def consensus():
         }
 
     return jsonify(response), 200
+
 
 @app.route('/nodes/register', methods=['POST'])
 def register_nodes():
@@ -623,6 +649,7 @@ def register_nodes():
     }
     return jsonify(response), 201
 
+
 #################################################################################################
 # Local Mining Routes
 #
@@ -651,7 +678,7 @@ def mine():
         sender="0",
         recipient=blockchain_address,
         amount=currency_length_formatter.format(Decimal(reward)),
-        hash=blockchain_public_key_hash,
+        hash=blockchain_public_key_hash
     )
 
     # Forge the new Block by adding it to the chain
@@ -666,6 +693,7 @@ def mine():
         'previous_hash': block['previous_hash'],
     }
     return jsonify(response), 200
+
 
 #################################################################################################
 # Block Routes
@@ -692,6 +720,7 @@ def get_block():
     index_num = int(values.get('index')) - 1
     return jsonify(blockchain.chain[index_num]), 200
 
+
 @app.route('/last_block', methods=['GET'])
 def get_last_block():
     """
@@ -703,6 +732,7 @@ def get_last_block():
 
     """
     return jsonify(blockchain.last_block)
+
 
 @app.route('/length', methods=['GET'])
 def get_length():
@@ -718,6 +748,7 @@ def get_length():
         "length": len(blockchain.chain)
     }
     return jsonify(response), 200
+
 
 @app.route('/submit_block', methods=['POST'])
 def submit_block():
@@ -755,10 +786,9 @@ def submit_block():
         duration = now - last_seen
         duration_in_s = duration.total_seconds()
 
-        if int(duration_in_s) > 300: # 5 minutes
+        if int(duration_in_s) > 300:  # 5 minutes
             miners.pop(miner_count)
         miner_count += 1
-
 
     # Check that the Proof of Work is correct
     if not blockchain.valid_proof(blockchain.last_block['proof'], proof, blockchain.last_block['previous_hash']):
@@ -766,7 +796,6 @@ def submit_block():
             'message': "Block has already been solved or is proof of work is incorrect."
         }
         return jsonify(response), 200
-
 
     # Set the default reward values
     solver_reward = reward
@@ -781,7 +810,6 @@ def submit_block():
     if len(miners) >= 2:
         solver_reward = currency_length_formatter.format((Decimal(reward) - (Decimal(reward) / 2)))
         helper_reward = currency_length_formatter.format((Decimal(reward) - (Decimal(reward) / 2)) / (len(miners) - 1))
-
 
     # We must receive a reward for finding the proof.
     # The sender is "0" to signify that this node has mined a new coin.
@@ -824,6 +852,7 @@ def submit_block():
 
     return jsonify(response), 200
 
+
 #################################################################################################
 # Transaction Routes
 #
@@ -855,6 +884,7 @@ def new_transaction():
     public_key_hash = hashlib.sha256(values['public_key'].encode()).hexdigest()
 
     # TODO : Be sure sender has enough available coin to send to the recipient
+    #   This should be assigning the wallet balance and checking against that instead of total being > currency_total_zero
     total = Decimal(currency_total_zero)
 
     for block in blockchain.chain:
@@ -876,6 +906,7 @@ def new_transaction():
     else:
         response = {'message': 'You do not own enough coin to make this transaction or the public key is invalid.'}
         return jsonify(response), 402
+
 
 #################################################################################################
 # Account & Balance Routes
@@ -901,6 +932,7 @@ def get_circulation():
     }
     return jsonify(response), 200
 
+
 @app.route('/account/balance', methods=['POST'])
 def account_balance():
     """
@@ -922,14 +954,15 @@ def account_balance():
 
     for link in chain:
         if len(link['transactions']) >= 1:
-                for transaction in link['transactions']:
-                    if transaction['recipient'] == address and transaction['hash'] == hash:
-                        total = total + Decimal(transaction['amount'])
-                    if transaction['sender'] == address and transaction['hash'] == hash:
-                        total = total - Decimal(transaction['amount'])
+            for transaction in link['transactions']:
+                if transaction['recipient'] == address and transaction['hash'] == hash:
+                    total = total + Decimal(transaction['amount'])
+                if transaction['sender'] == address and transaction['hash'] == hash:
+                    total = total - Decimal(transaction['amount'])
 
     response = {"address": address, "balance": currency_length_formatter.format(total)}
     return jsonify(response)
+
 
 @app.route('/account/register_address', methods=['GET'])
 def register_address():
@@ -950,6 +983,7 @@ def register_address():
 
     response = {"address": address}
     return jsonify(response)
+
 
 #################################################################################################
 # Main Application
@@ -972,15 +1006,16 @@ if __name__ == '__main__':
     blockchain.restore_chain()
 
     logger.info("Initiating chain backup thread...")
-    threading.Timer(120.0, blockchain.backup_chain).start()
+    threading.Timer(300.0, blockchain.backup_chain).start()
 
     logger.info("Node Address: {0}".format(blockchain_address))
-    logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) +1,
+    logger.info(Banners.banner.format(len(blockchain.chain), len(blockchain.nodes) + 1,
                                       len(miners), blockchain.total_coin(), difficulty_int))
 
     # Register our own node
     blockchain.register_node("{0}:{1}".format(node_host, node_port))
 
     logger.info("Starting {0} Fuel Blockchain & API..".format(app_name))
-    #app.run(host=node_host, port=port, debug=True, threading=False)
+    logger.info("Node host:port is {0}:{1}".format(node_host, node_port))
+    # app.run(host=node_host, port=port, debug=True, threading=False)
     app.run(host=node_ip, port=port, debug=False)

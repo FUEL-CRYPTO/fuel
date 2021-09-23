@@ -33,6 +33,7 @@ class Wallet(Cmd):
     #
     # help            : Print out help for the user
     #
+    #
     #################################################################################################
 
     def do_help(self, args):
@@ -165,8 +166,11 @@ class Wallet(Cmd):
         Return the length of the blockchain
 
         """
-        index_req = requests.get('{0}://{1}:{2}/length'.format(node_protocol, node_host, node_port))
-        print(index_req.json()['length'])
+        auth_node = authoritative_node()
+        local_node_index_req = requests.get('{0}://{1}:{2}/length'.format(node_protocol, node_host, node_port))
+        auth_node_index_req = requests.get('{0}://{1}/length'.format(node_protocol, auth_node))
+        print(f"Local Node: {local_node_index_req.json()['length']}")
+        print(f"Authoritative Node: {auth_node_index_req.json()['length']}")
 
     def do_register(self, args):
         """
@@ -334,11 +338,14 @@ class Wallet(Cmd):
         if not args:
             recipient = input("Recipient Account: ")
             amount = input("Amount: ")
+
         else :
             recipient = args.split(" ")[0]
             amount = args.split(" ")[1]
 
-        index_req = requests.post('{0}://{1}:{2}/transactions/new'.format(node_protocol, node_host, node_port),
+        auth_node = authoritative_node()
+
+        index_req = requests.post('{0}://{1}/transactions/new'.format(node_protocol, auth_node),
                                   headers={"Content-Type": "application/json"},
                                   json={"sender": address,
                                         "recipient": recipient,
@@ -456,7 +463,7 @@ class Wallet(Cmd):
 
         try:
             #n = random.randint(0, 2)
-            print("{0}\n\n".format(Banners.banner.format(length, nodes +1, miners, circu, difficulty_int)))
+            print("{0}\n\n".format(Banners.banner.format(length, nodes, miners, circu, difficulty_int)))
         except:
             pass
 

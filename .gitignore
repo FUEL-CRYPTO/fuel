@@ -6,3 +6,4 @@ keys/*.prv
 config.py
 aes.key
 storage/chain*
+examples

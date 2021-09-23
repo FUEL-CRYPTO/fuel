@@ -18,7 +18,8 @@ class AESCipher(object):
 
         """
         raw = self._pad(raw)
-        encrypted = self.cipher.encrypt(raw)
+        #encrypted = self.cipher.encrypt(raw)
+        encrypted = self.cipher.encrypt(bytes(raw, 'utf-8'))
         encoded = base64.b64encode(encrypted)
         return str(encoded, 'utf-8')
 
@@ -33,6 +34,7 @@ class AESCipher(object):
 
         """
         decoded = base64.b64decode(raw)
+        #decoded = base64.b64decode(bytes(blockchain_aes_key, 'utf-8'))
         decrypted = self.cipher.decrypt(decoded)
         return str(self._unpad(decrypted), 'utf-8')
 
